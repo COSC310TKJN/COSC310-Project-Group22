@@ -57,7 +57,7 @@ class Order:
             
         # Core order data
         self.order_id = order_id
-        self.resturaunt_id = restaurant_id
+        self.restauraunt_id = restaurant_id
         self.food_items = food_item
         self.order_time = order_time
         self.order_value = order_value
@@ -77,7 +77,7 @@ class Order:
 def mark_paid(self):
 
     # ensures only one order can be placed at once given instance
-    if self.status != OrderStatus:
+    if self.status != OrderStatus.CREATED:
         raise ValueError("Order can only be placed once")
     
     self.status = OrderStatus.PAID
