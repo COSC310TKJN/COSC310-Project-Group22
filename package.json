@@ -1,0 +1,24 @@
+{
+  "name": "cosc310-project-group22",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nasserwahbeh/COSC310-Project-Group22.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/nasserwahbeh/COSC310-Project-Group22/issues"
+  },
+  "homepage": "https://github.com/nasserwahbeh/COSC310-Project-Group22#readme",
+  "dependencies": {
+    "pdf-parse": "^2.4.5"
+  }
+}
