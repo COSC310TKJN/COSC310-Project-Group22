@@ -23,6 +23,9 @@ class User(Base):
     # Securely hashed password (never store plain text passwords).
     hashed_password: Mapped[str] = mapped_column(String(512), nullable=False)
 
+    # Canonical role stored as text to support role-based policy checks.
+    role: Mapped[str] = mapped_column(String(20), default="user", nullable=False)
+
     # Role flag used later to distinguish manager and regular user permissions.
     is_manager: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 

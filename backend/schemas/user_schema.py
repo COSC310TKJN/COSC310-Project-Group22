@@ -1,5 +1,7 @@
 """Pydantic schemas for user registration endpoints."""
 
+from typing import Literal
+
 from pydantic import BaseModel, Field
 
 
@@ -20,6 +22,12 @@ class UserRegisterRequest(BaseModel):
         description="Plain password that will be hashed before storing.",
     )
 
+    # Role selected at account creation to support user vs manager permissions.
+    role: Literal["user", "manager"] = Field(
+        default="user",
+        description="Account role that controls protected endpoint access.",
+    )
+
 
 # Response payload returned after successful user registration.
 class UserRegisterResponse(BaseModel):
@@ -31,6 +39,9 @@ class UserRegisterResponse(BaseModel):
 
     # Role flag exposed for client-side role-aware behavior.
     is_manager: bool
+
+    # Canonical role returned to clients for role-based UI and logic.
+    role: Literal["user", "manager"]
 
     # Success message to make API responses explicit.
     message: str = "User registered successfully."

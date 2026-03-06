@@ -1,7 +1,7 @@
 
 """FastAPI application entry point."""
 
-from fastapi import Depends, FastAPI, HTTPException, status
+from fastapi import Depends, FastAPI, Header, HTTPException, status
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -28,6 +28,34 @@ def health_check() -> dict[str, str]:
     return {"status": "ok"}
 
 
+# Resolve the current authenticated user from request headers for protected routes.
+def get_current_user(
+    x_user_id: int | None = Header(default=None, alias="X-User-Id"),
+    db: Session = Depends(get_db),
+) -> User:
+    # Require caller identity on protected endpoints.
+    if x_user_id is None:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Authentication required.")
+
+    # Load the calling user from the database.
+    current_user = db.query(User).filter(User.id == x_user_id).first()
+    if current_user is None:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid user credentials.")
+
+    # Return the authenticated user object to downstream dependencies/routes.
+    return current_user
+
+
+# Enforce manager-only access for administrative endpoints.
+def require_manager(current_user: User = Depends(get_current_user)) -> User:
+    # Reject users without manager privileges.
+    if not current_user.is_manager:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Manager role required.")
+
+    # Return the manager user when authorization succeeds.
+    return current_user
+
+
 # Register a new user account with username uniqueness enforcement.
 @app.post(
     "/auth/register",
@@ -43,11 +71,15 @@ def register_user(payload: UserRegisterRequest, db: Session = Depends(get_db)) -
     if existing_user is not None:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Username already exists.")
 
-    # Build a new user entity with a hashed password and default non-manager role.
+    # Derive manager flag from the requested account role.
+    is_manager = payload.role == "manager"
+
+    # Build a new user entity with a hashed password and assigned role.
     new_user = User(
         username=normalized_username,
         hashed_password=hash_password(payload.password),
-        is_manager=False,
+        role=payload.role,
+        is_manager=is_manager,
     )
     db.add(new_user)
 
@@ -67,4 +99,19 @@ def register_user(payload: UserRegisterRequest, db: Session = Depends(get_db)) -
         id=new_user.id,
         username=new_user.username,
         is_manager=new_user.is_manager,
+        role=new_user.role,
     )
+
+
+# Example protected endpoint accessible to any authenticated account.
+@app.get("/portal/user")
+def user_portal(current_user: User = Depends(get_current_user)) -> dict[str, str]:
+    # Return user-facing content for both regular users and managers.
+    return {"message": f"Welcome {current_user.username}. User portal access granted."}
+
+
+# Example protected endpoint restricted to manager role.
+@app.get("/portal/manager")
+def manager_portal(current_user: User = Depends(require_manager)) -> dict[str, str]:
+    # Return manager-only content after role check passes.
+    return {"message": f"Welcome {current_user.username}. Manager portal access granted."}
