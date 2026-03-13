@@ -70,3 +70,36 @@ Time: 2pm (online)
 - Ensure everyone has completed their part
 - Assist those who may be behind in implimenting certain features
 
+  
+
+# Meeting Notes – M3 update
+
+Date: March 12, 2026
+
+## Attendees
+- Tyler
+- Jason
+- Karan
+- Nasser
+
+## Agenda
+- Review M3 assignment requirements
+- Progress updates
+- Confirm next steps
+
+## Decisions
+- Complete backend features by EOD sunday with testing
+- merge to main by EOD monday
+
+## Action Items
+- Each team member must:
+    - Complete their assigned features 
+    - Add estimated time to each issue
+    - Ensure completed feature aligns with Definition of Done
+    - Update issue progress
+- Use GitHub Project Board for tracking
+- Use Pull Requests for merging work into main
+
+## Next Meeting
+- Work on merging features into the backed
+
