@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cd \"C:\\\\Users\\\\nasse\\\\OneDrive\\\\Desktop\\\\COSC310-Project\\\\COSC310-Project-Group22\" && python -m pytest backend/tests/test_payments.py -v 2>&1)"
+    ]
+  }
+}

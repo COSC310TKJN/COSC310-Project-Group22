@@ -29,6 +29,10 @@ def process_payment(db: Session, request: PaymentRequest) -> Payment:
     return payment_repo.create_payment(db, payment)
 
 
+def get_available_methods():
+    return [{"name": method.value, "label": method.name.replace("_", " ").title()} for method in PaymentMethod]
+
+
 def _simulate_payment(method: PaymentMethod, amount: float) -> PaymentStatus:
     if amount > 10000:
         return PaymentStatus.FAILED

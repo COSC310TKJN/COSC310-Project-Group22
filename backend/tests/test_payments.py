@@ -73,3 +73,14 @@ def test_duplicate_payment():
     })
     assert response.status_code == 400
     assert "already exists" in response.json()["detail"]
+
+
+def test_get_payment_methods():
+    response = client.get("/payments/methods")
+    assert response.status_code == 200
+    methods = response.json()
+    assert len(methods) == 3
+    names = [m["name"] for m in methods]
+    assert "credit_card" in names
+    assert "debit_card" in names
+    assert "paypal" in names
