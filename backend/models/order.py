@@ -1,5 +1,3 @@
-""" Order Backend System """
-
 from enum import Enum
 
 class OrderStatus (str, Enum):
@@ -37,7 +35,7 @@ class Order:
         if not food_item:
             raise ValueError("Order must include a food item")
             
-        """ Core order data """
+
         self.order_id = order_id
         self.restauraunt_id = restaurant_id
         self.food_items = food_item
@@ -53,9 +51,6 @@ class Order:
         self.status = OrderStatus.CREATED
 
 
-""" State Machine (all possible states) """
-
-""" Label order as paid (authenticated payment complete) """
 def mark_paid(self):
 
 
@@ -64,7 +59,7 @@ def mark_paid(self):
     
     self.status = OrderStatus.PAID
 
-""" Prepare order prior to delivery """
+
 def prep_order(self):
 
 
@@ -73,7 +68,7 @@ def prep_order(self):
     
     self.status = OrderStatus.PREPARING
 
-""" Sends out order for delivery """
+
 def send_out_delivery(self):
 
   
@@ -82,7 +77,7 @@ def send_out_delivery(self):
     
     self.status = OrderStatus.OUT_FOR_DELIVERY
 
-""" Labels orders as delivered """
+
 def mark_delivered(self):
 
     if self.status != OrderStatus.OUT_FOR_DELIVERY:
@@ -90,15 +85,13 @@ def mark_delivered(self):
     
     self.status = OrderStatus.DELIVERED
 
-""" Cancelling an order """
+
 def cancel(self):
 
     if self.status not in [OrderStatus.CREATED, OrderStatus.PAID]:
         raise ValueError("Order cannot be cancelled after preparing")
     
     self.status = OrderStatus.CANCELLED
-
-""" Serialization Component (using FastAPI) """
 
 
 def to_dict(self):
