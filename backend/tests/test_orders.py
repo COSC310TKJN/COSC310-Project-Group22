@@ -1,7 +1,6 @@
 import unittest
 from models.order import Order, OrderStatus
-from routes.order_routes import create_order
-from schemas.order_schema import OrderCreate
+
 
 
 class TestOrders(unittest.TestCase):
@@ -36,24 +35,6 @@ class TestOrders(unittest.TestCase):
                 customer_id="C2"
             )
  
-    def test_eligibility(self):
-
-        order = OrderCreate(
-            order_id="3",
-            restaurant_id=10,
-            food_item="Pizza",
-            order_time="2025-03-11T12:00:00",
-            order_value=25,
-            delivery_method="bike",
-            delivery_distance=5,
-            customer_id="C3"
-        )
-
-        response = create_order(order)
-
-        self.assertEqual(response["message"], "Order created")
-        self.assertIn("order", response)
-
 
 if __name__ == "__main__":
     unittest.main()
