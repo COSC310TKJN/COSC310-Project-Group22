@@ -3,6 +3,7 @@ from pydantic import ValidationError
 from models.order import Order, OrderStatus
 from routes.order_routes import create_order
 from schemas.order_schema import OrderCreate
+from services.order_service import OrderService, orders_db
 
 
 class TestOrders(unittest.TestCase):
@@ -61,7 +62,7 @@ class TestOrders(unittest.TestCase):
 
             OrderCreate(
             order_id="4",
-            restaurant_id=5,
+            restaurant_id=10,
             food_item="Burger",
             order_time="2025-03-11T12:00:00",
             order_value="twenty",
@@ -69,6 +70,24 @@ class TestOrders(unittest.TestCase):
             delivery_distance=4,
             customer_id="C4"
         )
+
+    def test_order_to_database(self):
+
+        order = OrderCreate(
+            order_id="5",
+            restaurant_id=10,
+            food_item="Pasta",
+            order_time="2025-03-11T12:00:00",
+            order_value=18,
+            delivery_method="bike",
+            delivery_distance=3,
+            customer_id="C5"
+        )
+
+        created_order = OrderService.create_order(order)
+
+        self.assertIn("5", orders_db)
+        self.assertEqual(orders_db["5"], created_order)
 
 
 if __name__ == "__main__":
