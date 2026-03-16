@@ -38,7 +38,7 @@ class Order:
 
         self.order_id = order_id
         self.restaurant_id = restaurant_id
-        self.food_items = food_item
+        self.food_item = food_item
         self.order_time = order_time
         self.order_value = order_value
         self.delivery_method = delivery_method
