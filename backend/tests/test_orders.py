@@ -89,6 +89,25 @@ class TestOrders(unittest.TestCase):
         self.assertIn("5", orders_db)
         self.assertEqual(orders_db["5"], created_order)
 
+    def test_cancel_order(self):
+
+        order = OrderCreate(
+            order_id="6",
+            restaurant_id=10,
+            food_item="Sushi",
+            order_time="2025-03-11T12:00:00",
+            order_value=30,
+            delivery_method="car",
+            delivery_distance=6,
+            customer_id="C6"
+        )
+
+        OrderService.create_order(order)
+
+        cancelled_order = OrderService.cancel_order("6")
+
+        self.assertEqual(cancelled_order.status, OrderStatus.CANCELLED)
+        
 
 if __name__ == "__main__":
     unittest.main()
