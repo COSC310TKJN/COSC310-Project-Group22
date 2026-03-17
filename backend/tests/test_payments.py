@@ -160,3 +160,44 @@ def test_failed_payment_order_blocked():
     data = response.json()
     assert data["is_paid"] is False
     assert "not completed" in data["message"].lower()
+
+
+def test_manager_sees_paid_orders():
+    client.post("/payments/", json={
+        "order_id": 50,
+        "customer_id": "user_500",
+        "amount": 50.00,
+        "payment_method": "credit_card",
+    })
+    client.post("/payments/", json={
+        "order_id": 51,
+        "customer_id": "user_501",
+        "amount": 15000.00,
+        "payment_method": "paypal",
+    })
+    response = client.get("/payments/manager/orders")
+    assert response.status_code == 200
+    orders = response.json()
+    order_ids = [o["order_id"] for o in orders]
+    assert 50 in order_ids
+    assert 51 not in order_ids
+
+
+def test_failed_payments_recorded():
+    client.post("/payments/", json={
+        "order_id": 60,
+        "customer_id": "user_600",
+        "amount": 15000.00,
+        "payment_method": "credit_card",
+    })
+    response = client.get("/payments/manager/failed-payments")
+    assert response.status_code == 200
+    failed = response.json()
+    assert len(failed) >= 1
+    assert failed[0]["status"] == "failed"
+
+
+def test_no_failed_payments():
+    response = client.get("/payments/manager/failed-payments")
+    assert response.status_code == 200
+    assert response.json() == []

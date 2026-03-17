@@ -38,3 +38,15 @@ def validate_order_payment(order_id: int, db: Session = Depends(get_db)):
 @router.get("/order/{order_id}/receipt", response_model=ReceiptResponse)
 def get_order_receipt(order_id: int, db: Session = Depends(get_db)):
     return receipt_service.get_receipt_by_order(db, order_id)
+
+
+@router.get("/manager/orders")
+def get_paid_orders(db: Session = Depends(get_db)):
+    payments = payment_service.get_paid_orders(db)
+    return [{"order_id": p.order_id, "amount": p.amount, "status": p.status} for p in payments]
+
+
+@router.get("/manager/failed-payments")
+def get_failed_payments(db: Session = Depends(get_db)):
+    payments = payment_service.get_failed_payments(db)
+    return [{"order_id": p.order_id, "amount": p.amount, "status": p.status, "transaction_id": p.transaction_id} for p in payments]

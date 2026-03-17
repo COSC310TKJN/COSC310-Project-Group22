@@ -62,6 +62,14 @@ def validate_order_paid(db: Session, order_id: int):
     return {"order_id": order_id, "is_paid": True, "message": "Payment completed"}
 
 
+def get_paid_orders(db: Session):
+    return payment_repo.get_payments_by_status(db, PaymentStatus.COMPLETED.value)
+
+
+def get_failed_payments(db: Session):
+    return payment_repo.get_payments_by_status(db, PaymentStatus.FAILED.value)
+
+
 def _simulate_payment(method: PaymentMethod, amount: float) -> PaymentStatus:
     if amount > 10000:
         return PaymentStatus.FAILED
