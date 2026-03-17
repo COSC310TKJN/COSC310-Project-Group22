@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from backend.models.payment import Payment, PaymentMethod, PaymentStatus
 from backend.repositories import payment_repo
 from backend.schemas.payment_schema import PaymentRequest
+from backend.services import receipt_service
 
 
 def process_payment(db: Session, request: PaymentRequest) -> Payment:
@@ -26,7 +27,39 @@ def process_payment(db: Session, request: PaymentRequest) -> Payment:
         transaction_id=transaction_id,
     )
 
-    return payment_repo.create_payment(db, payment)
+    payment = payment_repo.create_payment(db, payment)
+
+    if payment.status == PaymentStatus.COMPLETED.value:
+        receipt_service.generate_receipt(db, payment)
+
+    return payment
+
+
+def get_payment_status(db: Session, payment_id: int):
+    payment = payment_repo.get_payment_by_id(db, payment_id)
+    if not payment:
+        raise HTTPException(status_code=404, detail="Payment not found")
+    return payment
+
+
+def get_payment_by_order(db: Session, order_id: int):
+    payment = payment_repo.get_payment_by_order_id(db, order_id)
+    if not payment:
+        raise HTTPException(status_code=404, detail="Payment not found for this order")
+    return payment
+
+
+def get_available_methods():
+    return [{"name": method.value, "label": method.name.replace("_", " ").title()} for method in PaymentMethod]
+
+
+def validate_order_paid(db: Session, order_id: int):
+    payment = payment_repo.get_payment_by_order_id(db, order_id)
+    if not payment:
+        return {"order_id": order_id, "is_paid": False, "message": "No payment found for this order"}
+    if payment.status != PaymentStatus.COMPLETED.value:
+        return {"order_id": order_id, "is_paid": False, "message": "Payment not completed"}
+    return {"order_id": order_id, "is_paid": True, "message": "Payment completed"}
 
 
 def _simulate_payment(method: PaymentMethod, amount: float) -> PaymentStatus:
