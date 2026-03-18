@@ -28,6 +28,28 @@ def notify_order_placed(db: Session, user_id: str, order_id: int):
     )
 
 
+def notify_status_change(db: Session, user_id: str, order_id: int, new_status: str):
+    return send_notification(
+        db,
+        user_id=user_id,
+        notification_type=NotificationType.STATUS_CHANGE.value,
+        title="Order Status Updated",
+        message=f"Your order #{order_id} status changed to {new_status}.",
+        order_id=order_id,
+    )
+
+
+def notify_delivery(db: Session, user_id: str, order_id: int):
+    return send_notification(
+        db,
+        user_id=user_id,
+        notification_type=NotificationType.DELIVERY.value,
+        title="Order Delivered",
+        message=f"Your order #{order_id} has been delivered.",
+        order_id=order_id,
+    )
+
+
 def get_user_notifications(db: Session, user_id: str):
     return notification_repo.get_notifications_by_user(db, user_id)
 
