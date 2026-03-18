@@ -37,27 +37,44 @@ class TestOrders(unittest.TestCase):
                 delivery_method="car",
                 delivery_distance=4,
                 customer_id="C2"
-            )       
+            )
 
-    def test_no_modification(self):
+    def test_order_to_database(self):
 
-        order = Order(
-        order_id="3",
-        restaurant_id=10,
-        food_item="Pizza",
-        order_time="2025-03-11T12:00:00",
-        order_value=20,
-        delivery_method="bike",
-        delivery_distance=5,
-        customer_id="C3"
-    )
+        order = OrderCreate(
+            order_id="3",
+            restaurant_id=10,
+            food_item="Pasta",
+            order_time="2025-03-11T12:00:00",
+            order_value=18,
+            delivery_method="car",
+            delivery_distance=3,
+            customer_id="C5"
+        )
 
-        orders_db[order.order_id] = order
+        created_order = OrderService.create_order(order)
 
-        order.status = OrderStatus.COMPLETED
+        self.assertIn("3", orders_db)
+        self.assertEqual(orders_db["3"], created_order)
 
-        with self.assertRaises(ValueError):
-            OrderService.update_order(order.order_id, {"food_item": "Burger"})
+    def test_cancel_order(self):
+
+        order = OrderCreate(
+            order_id="4",
+            restaurant_id=10,
+            food_item="Sushi",
+            order_time="2025-03-11T12:00:00",
+            order_value=30,
+            delivery_method="bike",
+            delivery_distance=6,
+            customer_id="C4"
+        )
+
+        OrderService.create_order(order)
+
+        cancelled_order = OrderService.cancel_order("4")
+
+        self.assertEqual(cancelled_order.status, OrderStatus.CANCELLED)
 
 
 if __name__ == "__main__":

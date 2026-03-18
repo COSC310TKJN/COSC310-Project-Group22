@@ -30,3 +30,15 @@ class OrderService:
     def get_order(order_id):
 
         return orders_db.get(order_id)
+
+    @staticmethod
+    def cancel_order(order_id):
+
+        order = orders_db.get(order_id)
+
+        if not order:
+            raise ValueError("Order not found")
+
+        order.cancel()
+
+        return order
