@@ -50,6 +50,17 @@ def notify_delivery(db: Session, user_id: str, order_id: int):
     )
 
 
+def notify_manager_new_order(db: Session, manager_id: str, order_id: int):
+    return send_notification(
+        db,
+        user_id=manager_id,
+        notification_type=NotificationType.MANAGER_NEW_ORDER.value,
+        title="New Order Received",
+        message=f"A new order #{order_id} has been placed at your restaurant.",
+        order_id=order_id,
+    )
+
+
 def get_user_notifications(db: Session, user_id: str):
     return notification_repo.get_notifications_by_user(db, user_id)
 

@@ -37,3 +37,8 @@ def notify_status_change(user_id: str, order_id: int, new_status: str, db: Sessi
 @router.post("/delivery", response_model=NotificationResponse, status_code=201)
 def notify_delivery(user_id: str, order_id: int, db: Session = Depends(get_db)):
     return notification_service.notify_delivery(db, user_id, order_id)
+
+
+@router.post("/manager/new-order", response_model=NotificationResponse, status_code=201)
+def notify_manager_new_order(manager_id: str, order_id: int, db: Session = Depends(get_db)):
+    return notification_service.notify_manager_new_order(db, manager_id, order_id)

@@ -98,3 +98,15 @@ def test_delivery_notification():
     assert data["notification_type"] == "delivery"
     assert data["order_id"] == 700
     assert "delivered" in data["message"].lower()
+
+
+def test_manager_notified_new_order():
+    response = client.post("/notifications/manager/new-order?manager_id=manager_1&order_id=800")
+    assert response.status_code == 201
+    data = response.json()
+    assert data["user_id"] == "manager_1"
+    assert data["notification_type"] == "manager_new_order"
+    assert data["order_id"] == 800
+    assert "order #800" in data["message"]
+    notifs = client.get("/notifications/?user_id=manager_1")
+    assert len(notifs.json()) == 1
