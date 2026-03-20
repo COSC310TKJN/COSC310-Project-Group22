@@ -70,7 +70,6 @@ Time: 2pm (online)
 - Ensure everyone has completed their part
 - Assist those who may be behind in implimenting certain features
 
-  
 
 # Meeting Notes – M3 update
 
@@ -102,4 +101,37 @@ Date: March 12, 2026
 
 ## Next Meeting
 - Work on merging features into the backed
+
+
+# Meeting Notes – M3 Rubric Complience Reminder
+
+Date: March 19, 2026
+
+## Attendees
+- Tyler
+- Jason
+- Karan
+- Nasser
+
+## Agenda
+- Review M3 rubric requirements
+- Progress updates
+- Review SWE best practices
+
+## Decisions
+- Created the folder in GitHub containing screenshots and coverage reports
+- Team must ensure they employ different testing methodologies, such as mocking, equivalence partitioning, fault injection, and exception handling
+
+## Action Items
+- Each team member must:
+    - submit screenshots to the folder in GitHub containing screenshots and coverage reports of the testing
+    - continue making PR's
+    - ensure the diversity and coverage of testing
+
+## Next Meeting
+- Work on merging features into the backed
+
+
+
+
 
