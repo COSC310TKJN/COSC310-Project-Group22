@@ -18,7 +18,6 @@ router = APIRouter(prefix="/orders", tags=["Delivery Tracking"])
 
 @router.post("/", response_model=OrderResponse, status_code=201)
 def create_order(request: OrderCreateRequest, db: Session = Depends(get_db)):
-    """Create an order for delivery tracking (lifecycle starts at CREATED)."""
     order = order_repo.create_order(
         db,
         customer_id=request.customer_id,
