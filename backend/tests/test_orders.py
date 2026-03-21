@@ -1,6 +1,6 @@
 import unittest
-from pydantic import ValidationError
 import pytest
+from pydantic import ValidationError
 from models.order import Order, OrderStatus
 from routes.order_routes import create_order
 from schemas.order_schema import OrderCreate
@@ -134,11 +134,10 @@ class TestOrders(unittest.TestCase):
         orders_db[order.order_id] = order
         return order
 
-
     def test_unauthenticated_user_pytest():
 
         order = OrderCreate(
-            order_id="10",
+            order_id="7",
             restaurant_id=10,
             food_item="Burger",
             order_time="2025-03-11T12:00:00",
@@ -150,12 +149,11 @@ class TestOrders(unittest.TestCase):
 
         with pytest.raises(ValueError):
             create_order(order)
-
     
     def test_authenticated_user_integration(self):
 
         order = OrderCreate(
-            order_id="11",
+            order_id="8",
             restaurant_id=10,
             food_item="Pizza",
             order_time="2025-03-11T12:00:00",
