@@ -132,6 +132,39 @@ class TestOrders(unittest.TestCase):
 
         orders_db[order.order_id] = order
         return order
+    
+
+    def test_mixed_restaurant_rejected(self):
+
+        with self.assertRaises(ValueError):
+
+            OrderCreate(
+            order_id="8",
+            restaurant_id=[1, 2],
+            food_item="Pizza, Burger",
+            order_time="2025-03-11T12:00:00",
+            order_value=30,
+            delivery_method="bike",
+            delivery_distance=5,
+            customer_id="C8"
+        )
+            
+
+    def test_single_restaurant_allowed(self):
+
+        order = OrderCreate(
+            order_id="9",
+            restaurant_id=1,
+            food_item="Pizza",
+            order_time="2025-03-11T12:00:00",
+            order_value=15,
+            delivery_method="car",
+            delivery_distance=3,
+            customer_id="C9"
+        )
+        created_order = OrderService.create_order(order)
+
+        self.assertEqual(created_order.restaurant_id, 1)
 
 
 if __name__ == "__main__":
