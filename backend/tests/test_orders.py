@@ -139,7 +139,7 @@ class TestOrders(unittest.TestCase):
 
         order = OrderCreate(
             order_id="10",
-            restaurant_id=1,
+            restaurant_id=10,
             food_item="Burger",
             order_time="2025-03-11T12:00:00",
             order_value=15,
@@ -156,7 +156,7 @@ class TestOrders(unittest.TestCase):
 
         order = OrderCreate(
             order_id="11",
-            restaurant_id=1,
+            restaurant_id=10,
             food_item="Pizza",
             order_time="2025-03-11T12:00:00",
             order_value=20,
