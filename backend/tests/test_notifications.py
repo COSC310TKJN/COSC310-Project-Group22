@@ -122,3 +122,37 @@ def test_cancellation_notification():
     assert "cancelled" in data["message"]
     count = client.get("/notifications/unread/count?user_id=user_8")
     assert count.json()["unread_count"] == 1
+
+
+def test_set_notification_preferences():
+    response = client.put("/notifications/preferences?user_id=user_9&notification_type=order_placed&enabled=true&channel=email")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["user_id"] == "user_9"
+    assert data["notification_type"] == "order_placed"
+    assert data["enabled"] is True
+    assert data["channel"] == "email"
+
+
+def test_get_preferences():
+    client.put("/notifications/preferences?user_id=user_10&notification_type=order_placed&enabled=true&channel=sms")
+    client.put("/notifications/preferences?user_id=user_10&notification_type=delivery&enabled=false&channel=in_app")
+    response = client.get("/notifications/preferences?user_id=user_10")
+    assert response.status_code == 200
+    data = response.json()
+    assert len(data) == 2
+
+
+def test_disabled_notification_not_sent():
+    client.put("/notifications/preferences?user_id=user_11&notification_type=order_placed&enabled=false")
+    client.post("/notifications/order-placed?user_id=user_11&order_id=1100")
+    notifs = client.get("/notifications/?user_id=user_11")
+    assert len(notifs.json()) == 0
+
+
+def test_enabled_notification_sent():
+    client.put("/notifications/preferences?user_id=user_12&notification_type=order_placed&enabled=true&channel=email")
+    client.post("/notifications/order-placed?user_id=user_12&order_id=1200")
+    notifs = client.get("/notifications/?user_id=user_12")
+    assert len(notifs.json()) == 1
+    assert notifs.json()[0]["channel"] == "email"

@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 
 from backend.models.notification import Notification
+from backend.models.notification_preference import NotificationPreference
 
 
 def create_notification(db: Session, notification: Notification) -> Notification:
@@ -25,3 +26,27 @@ def mark_as_read(db: Session, notification_id: int) -> Notification | None:
         db.commit()
         db.refresh(notification)
     return notification
+
+
+def get_preference(db: Session, user_id: str, notification_type: str):
+    return db.query(NotificationPreference).filter(
+        NotificationPreference.user_id == user_id,
+        NotificationPreference.notification_type == notification_type,
+    ).first()
+
+
+def get_preferences_by_user(db: Session, user_id: str):
+    return db.query(NotificationPreference).filter(NotificationPreference.user_id == user_id).all()
+
+
+def upsert_preference(db: Session, user_id: str, notification_type: str, enabled: bool, channel: str):
+    pref = get_preference(db, user_id, notification_type)
+    if pref:
+        pref.enabled = enabled
+        pref.channel = channel
+    else:
+        pref = NotificationPreference(user_id=user_id, notification_type=notification_type, enabled=enabled, channel=channel)
+        db.add(pref)
+    db.commit()
+    db.refresh(pref)
+    return pref
