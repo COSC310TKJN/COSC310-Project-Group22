@@ -61,6 +61,17 @@ def notify_manager_new_order(db: Session, manager_id: str, order_id: int):
     )
 
 
+def notify_order_cancelled(db: Session, user_id: str, order_id: int):
+    return send_notification(
+        db,
+        user_id=user_id,
+        notification_type=NotificationType.ORDER_CANCELLED.value,
+        title="Order Cancelled",
+        message=f"Your order #{order_id} has been cancelled.",
+        order_id=order_id,
+    )
+
+
 def get_user_notifications(db: Session, user_id: str):
     return notification_repo.get_notifications_by_user(db, user_id)
 

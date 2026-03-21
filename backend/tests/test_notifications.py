@@ -110,3 +110,15 @@ def test_manager_notified_new_order():
     assert "order #800" in data["message"]
     notifs = client.get("/notifications/?user_id=manager_1")
     assert len(notifs.json()) == 1
+
+
+def test_cancellation_notification():
+    response = client.post("/notifications/order-cancelled?user_id=user_8&order_id=900")
+    assert response.status_code == 201
+    data = response.json()
+    assert data["user_id"] == "user_8"
+    assert data["notification_type"] == "order_cancelled"
+    assert data["order_id"] == 900
+    assert "cancelled" in data["message"]
+    count = client.get("/notifications/unread/count?user_id=user_8")
+    assert count.json()["unread_count"] == 1
