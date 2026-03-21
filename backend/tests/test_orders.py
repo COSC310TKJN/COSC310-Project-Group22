@@ -1,5 +1,6 @@
 import unittest
 from pydantic import ValidationError
+import pytest
 from models.order import Order, OrderStatus
 from routes.order_routes import create_order
 from schemas.order_schema import OrderCreate
@@ -132,6 +133,45 @@ class TestOrders(unittest.TestCase):
 
         orders_db[order.order_id] = order
         return order
+
+
+    def test_unauthenticated_user_pytest():
+
+        order = OrderCreate(
+            order_id="10",
+            restaurant_id=1,
+            food_item="Burger",
+            order_time="2025-03-11T12:00:00",
+            order_value=15,
+            delivery_method="bike",
+            delivery_distance=3,
+            customer_id="INVALID"
+    )
+
+        with pytest.raises(ValueError):
+            create_order(order)
+
+    
+    def test_authenticated_user_integration(self):
+
+        order = OrderCreate(
+            order_id="11",
+            restaurant_id=1,
+            food_item="Pizza",
+            order_time="2025-03-11T12:00:00",
+            order_value=20,
+            delivery_method="car",
+            delivery_distance=5,
+            customer_id="AUTH_USER"
+    )
+
+        is_authenticated = order.customer_id != "INVALID"
+
+        if is_authenticated:
+            response = create_order(order)
+            self.assertEqual(response["message"], "Order created")
+        else:
+            self.fail("User should be authenticated")
 
 
 if __name__ == "__main__":
