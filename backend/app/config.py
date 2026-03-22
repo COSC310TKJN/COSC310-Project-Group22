@@ -1,17 +1,11 @@
-import os
-from dataclasses import dataclass
+from pydantic_settings import BaseSettings
 
 
-@dataclass(frozen=True)
-class Settings:
-    app_name: str
-    database_url: str
+class Settings(BaseSettings):
+    DATABASE_URL: str = "sqlite:///./food_delivery.db"
+    APP_NAME: str = "Food Delivery Backend"
+
+    model_config = {"env_file": ".env"}
 
 
-def get_settings() -> Settings:
-    app_name = os.getenv("APP_NAME", "COSC310 Food Delivery API")
-    database_url = os.getenv("DATABASE_URL", "sqlite:///./food_delivery.db")
-    return Settings(app_name=app_name, database_url=database_url)
-
-
-settings = get_settings()
+settings = Settings()

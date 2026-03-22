@@ -1,3 +1,6 @@
 __pycache__/
 *.pyc
 food_delivery.db
+*.db
+.env
+.pytest_cache/
