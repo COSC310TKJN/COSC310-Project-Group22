@@ -47,6 +47,15 @@ def get_available_methods():
     return [{"name": method.value, "label": method.name.replace("_", " ").title()} for method in PaymentMethod]
 
 
+def validate_order_paid(db: Session, order_id: int):
+    payment = payment_repo.get_payment_by_order_id(db, order_id)
+    if not payment:
+        return {"order_id": order_id, "is_paid": False, "message": "No payment found for this order"}
+    if payment.status != PaymentStatus.COMPLETED.value:
+        return {"order_id": order_id, "is_paid": False, "message": "Payment not completed"}
+    return {"order_id": order_id, "is_paid": True, "message": "Payment completed"}
+
+
 def _simulate_payment(method: PaymentMethod, amount: float) -> PaymentStatus:
     if amount > 10000:
         return PaymentStatus.FAILED

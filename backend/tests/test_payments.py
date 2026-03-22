@@ -125,3 +125,38 @@ def test_get_payment_methods():
     assert "credit_card" in names
     assert "debit_card" in names
     assert "paypal" in names
+
+
+def test_paid_order_validated():
+    client.post("/payments/", json={
+        "order_id": 30,
+        "customer_id": "user_300",
+        "amount": 50.00,
+        "payment_method": "credit_card",
+    })
+    response = client.get("/payments/order/30/validate")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["is_paid"] is True
+
+
+def test_unpaid_order_blocked():
+    response = client.get("/payments/order/9999/validate")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["is_paid"] is False
+    assert "No payment found" in data["message"]
+
+
+def test_failed_payment_order_blocked():
+    client.post("/payments/", json={
+        "order_id": 40,
+        "customer_id": "user_400",
+        "amount": 15000.00,
+        "payment_method": "paypal",
+    })
+    response = client.get("/payments/order/40/validate")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["is_paid"] is False
+    assert "not completed" in data["message"].lower()

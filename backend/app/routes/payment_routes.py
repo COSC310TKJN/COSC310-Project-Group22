@@ -27,3 +27,8 @@ def get_payment(payment_id: int, db: Session = Depends(get_db)):
 @router.get("/order/{order_id}", response_model=PaymentStatusResponse)
 def get_order_payment(order_id: int, db: Session = Depends(get_db)):
     return payment_service.get_payment_by_order(db, order_id)
+
+
+@router.get("/order/{order_id}/validate")
+def validate_order_payment(order_id: int, db: Session = Depends(get_db)):
+    return payment_service.validate_order_paid(db, order_id)
