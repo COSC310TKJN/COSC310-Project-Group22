@@ -6,3 +6,6 @@ food_delivery.db
 .pytest_cache/
 *test_orders.cpython-*.pyc
 
+.idea/
+.vscode/
+.*/
