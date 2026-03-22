@@ -17,5 +17,5 @@ def test_get_settings_uses_default_value(monkeypatch):
 
     settings = Settings()
 
-    assert settings.APP_NAME == "COSC310 Food Delivery API"
+    assert settings.APP_NAME == "Food Delivery Backend"
     assert settings.DATABASE_URL == "sqlite:///./food_delivery.db"

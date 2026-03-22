@@ -11,6 +11,7 @@ app = FastAPI(title=settings.APP_NAME)
 app.include_router(payment_routes.router)
 app.include_router(auth_routes.router)
 
+
 @app.get("/health")
 def health_check():
     return {"status": "healthy"}
