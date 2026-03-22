@@ -29,6 +29,24 @@ def process_payment(db: Session, request: PaymentRequest) -> Payment:
     return payment_repo.create_payment(db, payment)
 
 
+def get_payment_status(db: Session, payment_id: int):
+    payment = payment_repo.get_payment_by_id(db, payment_id)
+    if not payment:
+        raise HTTPException(status_code=404, detail="Payment not found")
+    return payment
+
+
+def get_payment_by_order(db: Session, order_id: int):
+    payment = payment_repo.get_payment_by_order_id(db, order_id)
+    if not payment:
+        raise HTTPException(status_code=404, detail="Payment not found for this order")
+    return payment
+
+
+def get_available_methods():
+    return [{"name": method.value, "label": method.name.replace("_", " ").title()} for method in PaymentMethod]
+
+
 def _simulate_payment(method: PaymentMethod, amount: float) -> PaymentStatus:
     if amount > 10000:
         return PaymentStatus.FAILED

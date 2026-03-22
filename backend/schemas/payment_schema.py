@@ -25,3 +25,14 @@ class PaymentResponse(BaseModel):
     updated_at: Optional[datetime] = None
 
     model_config = {"from_attributes": True}
+
+
+class PaymentStatusResponse(BaseModel):
+    id: int
+    order_id: int
+    status: str
+    transaction_id: Optional[str] = None
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+
+    model_config = {"from_attributes": True}
