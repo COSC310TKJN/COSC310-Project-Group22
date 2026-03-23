@@ -1,3 +1,4 @@
+import pytest
 from services.pricing_service import PricingService
 
 
