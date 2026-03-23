@@ -62,31 +62,12 @@ def validate_order_paid(db: Session, order_id: int):
     return {"order_id": order_id, "is_paid": True, "message": "Payment completed"}
 
 
-def get_payment_status(db: Session, payment_id: int):
-    payment = payment_repo.get_payment_by_id(db, payment_id)
-    if not payment:
-        raise HTTPException(status_code=404, detail="Payment not found")
-    return payment
+def get_paid_orders(db: Session):
+    return payment_repo.get_payments_by_status(db, PaymentStatus.COMPLETED.value)
 
 
-def get_payment_by_order(db: Session, order_id: int):
-    payment = payment_repo.get_payment_by_order_id(db, order_id)
-    if not payment:
-        raise HTTPException(status_code=404, detail="Payment not found for this order")
-    return payment
-
-
-def get_available_methods():
-    return [{"name": method.value, "label": method.name.replace("_", " ").title()} for method in PaymentMethod]
-
-
-def validate_order_paid(db: Session, order_id: int):
-    payment = payment_repo.get_payment_by_order_id(db, order_id)
-    if not payment:
-        return {"order_id": order_id, "is_paid": False, "message": "No payment found for this order"}
-    if payment.status != PaymentStatus.COMPLETED.value:
-        return {"order_id": order_id, "is_paid": False, "message": "Payment not completed"}
-    return {"order_id": order_id, "is_paid": True, "message": "Payment completed"}
+def get_failed_payments(db: Session):
+    return payment_repo.get_payments_by_status(db, PaymentStatus.FAILED.value)
 
 
 def _simulate_payment(method: PaymentMethod, amount: float) -> PaymentStatus:
