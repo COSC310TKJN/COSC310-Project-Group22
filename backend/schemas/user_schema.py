@@ -13,13 +13,7 @@ class UserRegisterRequest(BaseModel):
         max_length=128,
         description="Plain password that will be hashed before storing.",
     )
-    role: Literal["user", "manager"] = Field(
-        default="user",
-        description="Account role that controls protected endpoint access.",
-    )
 class UserRegisterResponse(BaseModel):
     id: int
     username: str
-    is_manager: bool
-    role: Literal["user", "manager"]
     message: str = "User registered successfully."

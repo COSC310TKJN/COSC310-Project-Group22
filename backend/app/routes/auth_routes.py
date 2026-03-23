@@ -9,26 +9,6 @@ from backend.schemas.user_schema import UserRegisterRequest, UserRegisterRespons
 router = APIRouter()
 
 
-def get_current_user(
-    x_user_id: int | None = Header(default=None, alias="X-User-Id"),
-    db: Session = Depends(get_db),
-) -> User:
-    if x_user_id is None:
-        raise HTTPException(status_code=401, detail="Authentication required.")
-
-    user = db.query(User).filter(User.id == x_user_id).first()
-    if user is None:
-        raise HTTPException(status_code=401, detail="Invalid user credentials.")
-
-    return user
-
-
-def require_manager(current_user: User = Depends(get_current_user)) -> User:
-    if not current_user.is_manager:
-        raise HTTPException(status_code=403, detail="Manager role required.")
-
-    return current_user
-
 
 @router.post("/auth/register", response_model=UserRegisterResponse, status_code=201)
 def register_user(
@@ -41,9 +21,7 @@ def register_user(
 
     user = User(
         username=payload.username,
-        hashed_password=hash_password(payload.password),
-        role=payload.role,
-        is_manager=payload.role == "manager",
+        hashed_password=hash_password(payload.password),        
     )
     db.add(user)
     db.commit()
@@ -51,17 +29,5 @@ def register_user(
 
     return UserRegisterResponse(
         id=user.id,
-        username=user.username,
-        is_manager=user.is_manager,
-        role=user.role,
+        username=user.username       
     )
-
-
-@router.get("/portal/user")
-def user_portal(current_user: User = Depends(get_current_user)) -> dict[str, str]:
-    return {"message": f"Welcome {current_user.username}. User portal access granted."}
-
-
-@router.get("/portal/manager")
-def manager_portal(current_user: User = Depends(require_manager)) -> dict[str, str]:
-    return {"message": f"Welcome {current_user.username}. Manager portal access granted."}
