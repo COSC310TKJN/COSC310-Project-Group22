@@ -23,3 +23,7 @@ def update_payment_status(db: Session, payment: Payment, status: str) -> Payment
     db.commit()
     db.refresh(payment)
     return payment
+
+
+def get_payments_by_status(db: Session, status: str):
+    return db.query(Payment).filter(Payment.status == status).all()
