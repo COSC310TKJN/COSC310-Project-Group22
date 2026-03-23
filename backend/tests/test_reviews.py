@@ -10,6 +10,17 @@ TEST_DATABASE_URL = "sqlite:///./test_reviews.db"
 engine = create_engine(TEST_DATABASE_URL, connect_args={"check_same_thread": False})
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
+def override_get_db():
+    db = TestingSessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+
+app.dependency_overrides[get_db] = override_get_db
+client = TestClient(app)
+
 def test_rating_range_1_to_5():
   order_id = _create_delivered_order()
   r = client.post("/reviews/", json={"order_id": order_id, "rating": 0})
