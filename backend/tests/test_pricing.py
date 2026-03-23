@@ -1,5 +1,5 @@
 import pytest
-from services.pricing_service import PricingService
+from backend.services.pricing_service import PricingService
 
 
 def test_bike_delivery_fee():
