@@ -245,5 +245,37 @@ class TestOrders(unittest.TestCase):
         self.assertEqual(cancelled_order.status, OrderStatus.CANCELLED)
 
 
+    def test_order_id_unique(self):
+
+        order1 = OrderCreate(
+            order_id="11",
+            restaurant_id=10,
+            food_item="Burger",
+            order_time="2025-03-11T12:10:00",
+            order_value=15,
+            delivery_method="bike",
+            delivery_distance=3,
+            customer_id="C10"
+        )
+
+        order2 = OrderCreate(
+            order_id="12",
+            restaurant_id=10,
+            food_item="Sushi",
+            order_time="2025-03-11T12:20:00",
+            order_value=25,
+            delivery_method="car",
+            delivery_distance=5,
+            customer_id="C12"
+        )
+
+        OrderService.create_order(order1)
+        OrderService.create_order(order2)
+
+        self.assertIn("11", orders_db)
+        self.assertIn("12", orders_db)
+        self.assertNotEqual("11", "12")
+
+
 if __name__ == "__main__":
     unittest.main()
