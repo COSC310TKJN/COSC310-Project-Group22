@@ -14,9 +14,32 @@ class PricingService:
             rate = PricingService.CAR_RATE
 
         return rate * distance
-    
+
 
     @staticmethod
     def calc_tax(order_value):
 
         return order_value * PricingService.TAX_RATE
+
+
+    @staticmethod
+    def calc_total(order):
+
+        subtotal = order.order_value
+
+        delivery_fee = PricingService.calc_delivery_fee(
+            order.delivery_method,
+            order.delivery_distance
+        )
+        
+        tax = PricingService.calc_tax(subtotal)
+
+
+        total = subtotal + delivery_fee + tax
+
+        return {
+            "subtotal": subtotal,
+            "delivery_fee": delivery_fee,
+            "tax": tax,
+            "total": total
+        }

@@ -1,4 +1,5 @@
-from backend.models.order import Order
+from models.order import Order
+from services.pricing_service import PricingService
 
 orders_db = {}
 
@@ -42,3 +43,13 @@ class OrderService:
         order.cancel()
 
         return order
+
+    @staticmethod
+    def calculate_order_total(order_id):
+
+        order = orders_db.get(order_id)
+
+        if not order:
+            raise ValueError("Order not found")
+
+        return PricingService.calculate_total(order)
