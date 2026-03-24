@@ -1,6 +1,8 @@
 import pytest
 from backend.models.order import Order
 from backend.services.pricing_service import PricingService
+from backend.services.order_service import OrderService
+from backend.schemas.order_schema import OrderCreate
 
 
 def test_bike_delivery_fee():
@@ -136,3 +138,26 @@ def test_zero_distance():
 
     assert result["delivery_fee"] == 0
     assert result["total"] == 16.8
+
+
+def test_order_pricing_integration():
+
+    order_data = OrderCreate(
+        order_id="6",
+        restaurant_id=10,
+        food_item="Pizza",
+        order_time="2025-03-11T12:00:00",
+        order_value=25,
+        delivery_method="car",
+        delivery_distance=5,
+        customer_id="C6"
+    )
+
+    order = OrderService.create_order(order_data)
+
+    result = PricingService.calc_total(order)
+
+    assert result["subtotal"] == 25
+    assert result["delivery_fee"] == 5
+    assert result["tax"] == 3
+    assert result["total"] == 33
