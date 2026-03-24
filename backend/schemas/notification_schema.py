@@ -16,3 +16,19 @@ class NotificationResponse(BaseModel):
     created_at: Optional[datetime] = None
 
     model_config = {"from_attributes": True}
+
+
+class PreferenceRequest(BaseModel):
+    notification_type: str
+    enabled: bool = True
+    channel: str = "in_app"
+
+
+class PreferenceResponse(BaseModel):
+    id: int
+    user_id: str
+    notification_type: str
+    enabled: bool
+    channel: str
+
+    model_config = {"from_attributes": True}

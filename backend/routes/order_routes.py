@@ -1,6 +1,7 @@
 from fastapi import APIRouter
-from schemas.order_schema import OrderCreate
-from services.order_service import OrderService
+from backend.schemas.order_schema import OrderCreate
+from backend.services.order_service import OrderService
+
 
 router = APIRouter()
 
