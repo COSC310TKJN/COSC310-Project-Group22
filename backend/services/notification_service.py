@@ -6,6 +6,11 @@ from backend.repositories import notification_repo
 
 
 def send_notification(db: Session, user_id: str, notification_type: str, title: str, message: str, order_id: int = None, channel: str = NotificationChannel.IN_APP.value):
+    pref = notification_repo.get_preference(db, user_id, notification_type)
+    if pref and not pref.enabled:
+        return None
+    if pref and pref.channel:
+        channel = pref.channel
     notification = Notification(
         user_id=user_id,
         notification_type=notification_type,
@@ -85,3 +90,11 @@ def mark_notification_read(db: Session, notification_id: int):
     if not notification:
         raise HTTPException(status_code=404, detail="Notification not found")
     return notification
+
+
+def get_preferences(db: Session, user_id: str):
+    return notification_repo.get_preferences_by_user(db, user_id)
+
+
+def update_preference(db: Session, user_id: str, notification_type: str, enabled: bool, channel: str):
+    return notification_repo.upsert_preference(db, user_id, notification_type, enabled, channel)

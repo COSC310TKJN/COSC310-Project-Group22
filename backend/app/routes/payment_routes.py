@@ -20,11 +20,6 @@ def submit_payment(request: PaymentRequest, db: Session = Depends(get_db)):
     return payment
 
 
-@router.get("/{payment_id}", response_model=PaymentStatusResponse)
-def get_payment(payment_id: int, db: Session = Depends(get_db)):
-    return payment_service.get_payment_status(db, payment_id)
-
-
 @router.get("/order/{order_id}", response_model=PaymentStatusResponse)
 def get_order_payment(order_id: int, db: Session = Depends(get_db)):
     return payment_service.get_payment_by_order(db, order_id)
@@ -50,3 +45,8 @@ def get_paid_orders(db: Session = Depends(get_db)):
 def get_failed_payments(db: Session = Depends(get_db)):
     payments = payment_service.get_failed_payments(db)
     return [{"order_id": p.order_id, "amount": p.amount, "status": p.status, "transaction_id": p.transaction_id} for p in payments]
+
+
+@router.get("/{payment_id}", response_model=PaymentStatusResponse)
+def get_payment(payment_id: int, db: Session = Depends(get_db)):
+    return payment_service.get_payment_status(db, payment_id)
