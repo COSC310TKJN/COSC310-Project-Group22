@@ -1,6 +1,6 @@
 import unittest
 import pytest
-from pydantic import ValidationErro
+from pydantic import ValidationError
 from backend.models.order import Order, OrderStatus
 from backend.routes.order_routes import create_order
 from backend.schemas.order_schema import OrderCreate
