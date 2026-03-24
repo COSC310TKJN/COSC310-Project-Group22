@@ -124,3 +124,43 @@ def test_role_based_endpoint_access_control(test_context):
         headers={"X-User-Id": str(manager_id)},
     )
     assert manager_failed_payments_response.status_code == 200
+
+
+def test_login_succeeds_with_valid_credentials(test_context):
+    client: TestClient = test_context["client"]
+
+    register_response = client.post(
+        "/auth/register",
+        json={"username": "login_user", "password": "StrongPass123"},
+    )
+    assert register_response.status_code == 201
+
+    response = client.post(
+        "/auth/login",
+        json={"username": "login_user", "password": "StrongPass123"},
+    )
+
+    assert response.status_code == 200
+    response_body = response.json()
+    assert response_body["username"] == "login_user"
+    assert response_body["role"] == "user"
+    assert response_body["is_manager"] is False
+    assert response_body["message"] == "Login successful."
+
+
+def test_login_rejects_invalid_credentials(test_context):
+    client: TestClient = test_context["client"]
+
+    register_response = client.post(
+        "/auth/register",
+        json={"username": "login_user", "password": "StrongPass123"},
+    )
+    assert register_response.status_code == 201
+
+    response = client.post(
+        "/auth/login",
+        json={"username": "login_user", "password": "WrongPass123"},
+    )
+
+    assert response.status_code == 401
+    assert response.json()["detail"] == "Invalid username or password."

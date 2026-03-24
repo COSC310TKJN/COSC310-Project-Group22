@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from backend.app.routes import auth_routes
 from backend.app.security import hash_password
 from backend.models.user import User
-from backend.schemas.user_schema import UserRegisterRequest
+from backend.schemas.user_schema import UserLoginRequest, UserRegisterRequest
 
 
 def test_get_current_user_returns_user(test_context):
@@ -149,6 +149,57 @@ def test_register_user_creates_manager(test_context):
 
         assert response.role == "manager"
         assert response.is_manager is True
+    finally:
+        db.close()
+
+
+def test_login_user_returns_existing_user(test_context):
+    session_local = test_context["SessionLocal"]
+    db: Session = session_local()
+
+    try:
+        user = User(
+            username="login_user",
+            hashed_password=hash_password("StrongPass123"),
+            role="user",
+            is_manager=False,
+        )
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+
+        payload = UserLoginRequest(username="login_user", password="StrongPass123")
+        response = auth_routes.login_user(payload, db)
+
+        assert response.id == user.id
+        assert response.username == "login_user"
+        assert response.role == "user"
+        assert response.is_manager is False
+    finally:
+        db.close()
+
+
+def test_login_user_rejects_invalid_credentials(test_context):
+    session_local = test_context["SessionLocal"]
+    db: Session = session_local()
+
+    try:
+        user = User(
+            username="login_user",
+            hashed_password=hash_password("StrongPass123"),
+            role="user",
+            is_manager=False,
+        )
+        db.add(user)
+        db.commit()
+
+        payload = UserLoginRequest(username="login_user", password="WrongPass123")
+
+        with pytest.raises(HTTPException) as error:
+            auth_routes.login_user(payload, db)
+
+        assert error.value.status_code == 401
+        assert error.value.detail == "Invalid username or password."
     finally:
         db.close()
 
