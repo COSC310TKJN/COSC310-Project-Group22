@@ -14,3 +14,9 @@ class PricingService:
             rate = PricingService.CAR_RATE
 
         return rate * distance
+    
+
+    @staticmethod
+    def calc_tax(order_value):
+
+        return order_value * PricingService.TAX_RATE
