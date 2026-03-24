@@ -204,6 +204,46 @@ class TestOrders(unittest.TestCase):
         else:
             self.fail("User should be authenticated")
 
+    def test_cannot_cancel_after_preparing(self):
+
+        order = Order(
+            order_id="9",
+            restaurant_id=10,
+            food_item="Burger",
+            order_time="2025-03-11T12:00:00",
+            order_value=15,
+            delivery_method="bike",
+            delivery_distance=5,
+            customer_id="C9"
+        )
+
+        order.status = OrderStatus.PREPARING
+
+        orders_db["9"] = order
+
+        with self.assertRaises(ValueError):
+            OrderService.cancel_order("9")
+
+
+    def test_cancel_allowed_before_preparing(self):
+
+        order = Order(
+            order_id="10",
+            restaurant_id=10,
+            food_item="Pizza",
+            order_time="2025-03-11T12:00:00",
+            order_value=20,
+            delivery_method="car",
+            delivery_distance=4,
+            customer_id="C10"
+        )
+
+        orders_db["10"] = order
+
+        cancelled_order = OrderService.cancel_order("10")
+
+        self.assertEqual(cancelled_order.status, OrderStatus.CANCELLED)
+
 
 if __name__ == "__main__":
     unittest.main()
