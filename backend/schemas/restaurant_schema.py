@@ -29,7 +29,6 @@ class RestaurantResponse(BaseModel):
     name: str
     cuisine_type: str
     address: Optional[str] = None
-    rating: float = 0.0
 
     model_config = {"from_attributes": True}
 
