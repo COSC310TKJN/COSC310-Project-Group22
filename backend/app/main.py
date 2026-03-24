@@ -12,7 +12,7 @@ from backend.app.bootstrap import check_restaurants_exist
 Base.metadata.create_all(bind=engine)
 
 async def lifespan(app: FastAPI):
-    ensure_restaurants_exist()
+    check_restaurants_exist()
     yield
 
 app = FastAPI(title=settings.APP_NAME, lifespan=lifespan)
