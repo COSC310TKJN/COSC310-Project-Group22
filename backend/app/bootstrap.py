@@ -1,25 +1,43 @@
+import csv
 import os
+from pathlib import Path
+
 from backend.app.database import SessionLocal
 from backend.models.restaurant import Restaurant
 
-CUISINES = ["American", "Asian", "Italian", "Mediterranean", "Mexican"]
+DATASET_PATH = Path(__file__).resolve().parents[2] / "data" / "food_delivery.csv"
 
-def check_restaurants_exist() -> None:
+
+def load_restaurants_from_dataset(dataset_path: Path = DATASET_PATH) -> list[Restaurant]:
+    restaurants_by_id: dict[int, Restaurant] = {}
+
+    with dataset_path.open(newline="", encoding="utf-8") as dataset_file:
+        reader = csv.DictReader(dataset_file)
+        for row in reader:
+            restaurant_id = int(row["restaurant_id"])
+            if restaurant_id in restaurants_by_id:
+                continue
+
+            restaurants_by_id[restaurant_id] = Restaurant(
+                id=restaurant_id,
+                name=f"Restaurant {restaurant_id}",
+                cuisine_type=row["preferred_cuisine"],
+                address=row["location"],
+            )
+
+    return list(restaurants_by_id.values())
+
+
+def check_restaurants_exist(dataset_path: Path = DATASET_PATH) -> None:
     if os.environ.get("SKIP_RESTAURANT_BOOTSTRAP"):
         return
+
     db = SessionLocal()
     try:
         if db.query(Restaurant).count() > 0:
             return
-        for rid in range(1, 101):
-            db.add(
-                Restaurant(
-                    id=rid,
-                    name=f"Restaurant {rid}",
-                    cuisine_type=CUISINES[(rid - 1) % len(CUISINES)],
-                    address=f"City {(rid % 10) + 1}, Street {rid}",
-                )
-            )
+
+        db.add_all(load_restaurants_from_dataset(dataset_path))
         db.commit()
     finally:
         db.close()
