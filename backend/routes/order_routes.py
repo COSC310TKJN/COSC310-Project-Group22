@@ -36,3 +36,13 @@ def cancel_order(order_id: str):
         "message": "Order cancelled",
         "order": order.to_dict()
     }
+
+@router.get("/orders/{order_id}/total")
+def get_order_total(order_id: str):
+
+    pricing = OrderService.calculate_order_total(order_id)
+
+    return {
+        "order_id": order_id,
+        "pricing": pricing
+    }
