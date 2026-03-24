@@ -76,6 +76,34 @@ def test_item_shows_computed_price():
         assert "estimated_price" in item
         assert item["estimated_price"] > 0
 
+def test_items_display_descriptions():
+    response = client.get("/restaurants/1/menu")
+    assert response.status_code == 200
+    data = response.json()
+    for item in data:
+        assert "description" in item
+        assert item["description"] is not None
+        assert len(item["description"]) > 0
+
+
+def test_search_restaurants_paginated():
+    response = client.get("/restaurants/search/restaurants?q=Restaurant&page=1&page_size=5")
+    assert response.status_code == 200
+    data = response.json()
+    assert "items" in data
+    assert "total" in data
+    assert data["page"] == 1
+    assert data["page_size"] == 5
+
+
+def test_search_items_paginated():
+    response = client.get("/restaurants/search/items?q=Pasta&page=1&page_size=5")
+    assert response.status_code == 200
+    data = response.json()
+    assert "items" in data
+    assert "total" in data
+    assert data["page"] == 1
+
 
 def test_get_restaurant_detail():
     response = client.get("/restaurants/1")
