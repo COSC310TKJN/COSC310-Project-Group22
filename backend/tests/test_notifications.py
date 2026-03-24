@@ -66,3 +66,35 @@ def test_mark_as_read():
     assert response.json()["is_read"] is True
     count = client.get("/notifications/unread/count?user_id=user_4")
     assert count.json()["unread_count"] == 0
+
+
+def test_notify_status_change():
+    response = client.post("/notifications/status-change?user_id=user_5&order_id=500&new_status=preparing")
+    assert response.status_code == 201
+    data = response.json()
+    assert data["user_id"] == "user_5"
+    assert data["notification_type"] == "status_change"
+    assert data["order_id"] == 500
+    assert "preparing" in data["message"]
+
+
+def test_multiple_status_changes():
+    client.post("/notifications/status-change?user_id=user_6&order_id=600&new_status=preparing")
+    client.post("/notifications/status-change?user_id=user_6&order_id=600&new_status=out_for_delivery")
+    response = client.get("/notifications/?user_id=user_6")
+    assert response.status_code == 200
+    data = response.json()
+    assert len(data) == 2
+    messages = [n["message"] for n in data]
+    assert any("preparing" in m for m in messages)
+    assert any("out_for_delivery" in m for m in messages)
+
+
+def test_delivery_notification():
+    response = client.post("/notifications/delivery?user_id=user_7&order_id=700")
+    assert response.status_code == 201
+    data = response.json()
+    assert data["user_id"] == "user_7"
+    assert data["notification_type"] == "delivery"
+    assert data["order_id"] == 700
+    assert "delivered" in data["message"].lower()

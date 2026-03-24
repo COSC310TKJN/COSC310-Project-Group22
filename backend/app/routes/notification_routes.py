@@ -27,3 +27,13 @@ def mark_as_read(notification_id: int, db: Session = Depends(get_db)):
 @router.post("/order-placed", response_model=NotificationResponse, status_code=201)
 def notify_order_placed(user_id: str, order_id: int, db: Session = Depends(get_db)):
     return notification_service.notify_order_placed(db, user_id, order_id)
+
+
+@router.post("/status-change", response_model=NotificationResponse, status_code=201)
+def notify_status_change(user_id: str, order_id: int, new_status: str, db: Session = Depends(get_db)):
+    return notification_service.notify_status_change(db, user_id, order_id, new_status)
+
+
+@router.post("/delivery", response_model=NotificationResponse, status_code=201)
+def notify_delivery(user_id: str, order_id: int, db: Session = Depends(get_db)):
+    return notification_service.notify_delivery(db, user_id, order_id)
