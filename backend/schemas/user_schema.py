@@ -1,6 +1,7 @@
 from typing import Literal
 from pydantic import BaseModel, Field
 
+
 class UserRegisterRequest(BaseModel):
     username: str = Field(
         min_length=3,
@@ -17,9 +18,24 @@ class UserRegisterRequest(BaseModel):
         default="user",
         description="Account role that controls protected endpoint access.",
     )
+
+
 class UserRegisterResponse(BaseModel):
     id: int
     username: str
     is_manager: bool
     role: Literal["user", "manager"]
     message: str = "User registered successfully."
+
+
+class UserLoginRequest(BaseModel):
+    username: str
+    password: str
+
+
+class UserLoginResponse(BaseModel):
+    id: int
+    username: str
+    is_manager: bool
+    role: Literal["user", "manager"]
+    message: str = "Login successful."
