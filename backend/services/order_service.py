@@ -1,4 +1,4 @@
-from models.order import Order
+from backend.models.order import Order
 
 orders_db = {}
 
