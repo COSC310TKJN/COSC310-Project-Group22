@@ -4,6 +4,15 @@ from sqlalchemy.orm import Session
 from backend.models.user import User
 
 
+def login_user(client: TestClient, username: str, password: str) -> int:
+    response = client.post(
+        "/auth/login",
+        json={"username": username, "password": password},
+    )
+    assert response.status_code == 200
+    return response.json()["id"]
+
+
 def test_register_user_success_persists_user_record(test_context):
     client: TestClient = test_context["client"]
     session_local = test_context["SessionLocal"]
@@ -80,14 +89,14 @@ def test_role_based_endpoint_access_control(test_context):
         json={"username": "regular_user", "password": "RegularPass123", "role": "user"},
     )
     assert user_response.status_code == 201
-    user_id = user_response.json()["id"]
+    user_id = login_user(client, "regular_user", "RegularPass123")
 
     manager_response = client.post(
         "/auth/register",
         json={"username": "restaurant_owner", "password": "OwnerPass123", "role": "manager"},
     )
     assert manager_response.status_code == 201
-    manager_id = manager_response.json()["id"]
+    manager_id = login_user(client, "restaurant_owner", "OwnerPass123")
 
     user_portal_response = client.get("/portal/user", headers={"X-User-Id": str(user_id)})
     assert user_portal_response.status_code == 200
@@ -164,3 +173,22 @@ def test_login_rejects_invalid_credentials(test_context):
 
     assert response.status_code == 401
     assert response.json()["detail"] == "Invalid username or password."
+
+
+def test_logout_blocks_future_protected_access(test_context):
+    client: TestClient = test_context["client"]
+
+    register_response = client.post(
+        "/auth/register",
+        json={"username": "logout_user", "password": "StrongPass123"},
+    )
+    assert register_response.status_code == 201
+    user_id = login_user(client, "logout_user", "StrongPass123")
+
+    logout_response = client.post("/auth/logout", headers={"X-User-Id": str(user_id)})
+    assert logout_response.status_code == 200
+    assert logout_response.json()["message"] == "Logout successful."
+
+    blocked_response = client.get("/portal/user", headers={"X-User-Id": str(user_id)})
+    assert blocked_response.status_code == 401
+    assert blocked_response.json()["detail"] == "Login required."

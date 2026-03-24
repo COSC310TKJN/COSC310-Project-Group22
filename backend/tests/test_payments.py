@@ -5,6 +5,7 @@ from sqlalchemy.orm import sessionmaker
 
 from backend.app.database import Base, get_db
 from backend.app.main import app
+from backend.app.routes import auth_routes
 from backend.models.user import User
 from backend.app.security import hash_password
 
@@ -30,6 +31,7 @@ client = TestClient(app)
 def setup_db():
     Base.metadata.create_all(bind=engine)
     yield
+    auth_routes.logged_in_users.clear()
     Base.metadata.drop_all(bind=engine)
 
 
@@ -183,6 +185,7 @@ def test_manager_sees_paid_orders():
         manager = create_test_user(db, "manager_orders", "manager")
     finally:
         db.close()
+    login_test_user("manager_orders")
 
     response = client.get(
         "/payments/manager/orders",
@@ -201,6 +204,7 @@ def test_regular_user_blocked_from_paid_orders():
         regular_user = create_test_user(db, "regular_orders", "user")
     finally:
         db.close()
+    login_test_user("regular_orders")
 
     response = client.get(
         "/payments/manager/orders",
@@ -223,6 +227,7 @@ def test_failed_payments_recorded():
         manager = create_test_user(db, "manager_failed", "manager")
     finally:
         db.close()
+    login_test_user("manager_failed")
 
     response = client.get(
         "/payments/manager/failed-payments",
@@ -240,6 +245,7 @@ def test_regular_user_blocked_from_failed_payments():
         regular_user = create_test_user(db, "regular_failed", "user")
     finally:
         db.close()
+    login_test_user("regular_failed")
 
     response = client.get(
         "/payments/manager/failed-payments",
@@ -256,6 +262,7 @@ def test_no_failed_payments():
         manager = create_test_user(db, "manager_empty_failed", "manager")
     finally:
         db.close()
+    login_test_user("manager_empty_failed")
 
     response = client.get(
         "/payments/manager/failed-payments",
@@ -275,4 +282,13 @@ def create_test_user(db, username, role):
     db.commit()
     db.refresh(user)
     return user
+
+
+def login_test_user(username, password="TestPass123"):
+    response = client.post(
+        "/auth/login",
+        json={"username": username, "password": password},
+    )
+    assert response.status_code == 200
+    return response.json()["id"]
 

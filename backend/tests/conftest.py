@@ -8,6 +8,7 @@ from sqlalchemy.orm import sessionmaker
 
 from backend.app.database import Base, get_db
 from backend.app.main import app
+from backend.app.routes import auth_routes
 
 
 @pytest.fixture()
@@ -37,6 +38,7 @@ def test_context():
             yield {"client": client, "SessionLocal": test_session_local}
     finally:
         app.dependency_overrides.clear()
+        auth_routes.logged_in_users.clear()
         Base.metadata.drop_all(bind=test_engine)
         test_engine.dispose()
         os.remove(temp_db_path)

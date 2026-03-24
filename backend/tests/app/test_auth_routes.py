@@ -22,12 +22,14 @@ def test_get_current_user_returns_user(test_context):
         db.add(user)
         db.commit()
         db.refresh(user)
+        auth_routes.logged_in_users.add(user.id)
 
         current_user = auth_routes.get_current_user(x_user_id=user.id, db=db)
 
         assert current_user.id == user.id
         assert current_user.username == "current_user"
     finally:
+        auth_routes.logged_in_users.clear()
         db.close()
 
 
@@ -175,7 +177,9 @@ def test_login_user_returns_existing_user(test_context):
         assert response.username == "login_user"
         assert response.role == "user"
         assert response.is_manager is False
+        assert user.id in auth_routes.logged_in_users
     finally:
+        auth_routes.logged_in_users.clear()
         db.close()
 
 
@@ -201,6 +205,31 @@ def test_login_user_rejects_invalid_credentials(test_context):
         assert error.value.status_code == 401
         assert error.value.detail == "Invalid username or password."
     finally:
+        db.close()
+
+
+def test_logout_user_removes_logged_in_user(test_context):
+    session_local = test_context["SessionLocal"]
+    db: Session = session_local()
+
+    try:
+        user = User(
+            username="logout_user",
+            hashed_password=hash_password("StrongPass123"),
+            role="user",
+            is_manager=False,
+        )
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+        auth_routes.logged_in_users.add(user.id)
+
+        response = auth_routes.logout_user(user)
+
+        assert response == {"message": "Logout successful."}
+        assert user.id not in auth_routes.logged_in_users
+    finally:
+        auth_routes.logged_in_users.clear()
         db.close()
 
 
