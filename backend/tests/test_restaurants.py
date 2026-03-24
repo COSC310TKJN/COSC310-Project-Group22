@@ -52,6 +52,14 @@ def test_browse_restaurants():
     assert data["page_size"] == 10
 
 
+def test_filter_by_cuisine():
+    """Feat3-FR3: Filter returns cuisine-matching restaurants."""
+    response = client.get("/restaurants/?cuisine=American")
+    assert response.status_code == 200
+    data = response.json()
+    assert all(item["cuisine_type"] == "American" for item in data["items"])
+    
+
 def test_get_restaurant_menu_unique():
     r1 = client.get("/restaurants/1/menu").json()
     r2 = client.get("/restaurants/2/menu").json()
