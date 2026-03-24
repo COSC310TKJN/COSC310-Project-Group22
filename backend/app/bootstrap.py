@@ -18,7 +18,6 @@ def check_restaurants_exist() -> None:
                     name=f"Restaurant {rid}",
                     cuisine_type=CUISINES[(rid - 1) % len(CUISINES)],
                     address=f"City {(rid % 10) + 1}, Street {rid}",
-                    rating=round(3.5 + (rid % 15) / 10, 1),
                 )
             )
         db.commit()
