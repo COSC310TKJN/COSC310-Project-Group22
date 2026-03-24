@@ -10,4 +10,3 @@ class Restaurant(Base):
     name = Column(String, nullable=False)
     cuisine_type = Column(String, nullable=False, index=True)
     address = Column(String, nullable=True)
-    rating = Column(Float, default=0.0)
