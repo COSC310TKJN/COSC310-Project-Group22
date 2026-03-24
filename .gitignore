@@ -5,6 +5,7 @@ food_delivery.db
 .env
 .pytest_cache/
 *test_orders.cpython-*.pyc
+*test_orders.c  python-*.pyc
 
 .idea/
 .vscode/
