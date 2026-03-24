@@ -5,6 +5,9 @@ from sqlalchemy.orm import sessionmaker
 
 from backend.app.database import Base, get_db
 from backend.app.main import app
+from backend.models.user import User
+from backend.app.security import hash_password
+
 
 TEST_DATABASE_URL = "sqlite:///./test.db"
 engine = create_engine(TEST_DATABASE_URL, connect_args={"check_same_thread": False})
@@ -175,12 +178,37 @@ def test_manager_sees_paid_orders():
         "amount": 15000.00,
         "payment_method": "paypal",
     })
-    response = client.get("/payments/manager/orders")
+    db = TestingSessionLocal()
+    try:
+        manager = create_test_user(db, "manager_orders", "manager")
+    finally:
+        db.close()
+
+    response = client.get(
+        "/payments/manager/orders",
+        headers={"X-User-Id": str(manager.id)},
+    )
     assert response.status_code == 200
     orders = response.json()
     order_ids = [o["order_id"] for o in orders]
     assert 50 in order_ids
     assert 51 not in order_ids
+
+
+def test_regular_user_blocked_from_paid_orders():
+    db = TestingSessionLocal()
+    try:
+        regular_user = create_test_user(db, "regular_orders", "user")
+    finally:
+        db.close()
+
+    response = client.get(
+        "/payments/manager/orders",
+        headers={"X-User-Id": str(regular_user.id)},
+    )
+
+    assert response.status_code == 403
+    assert response.json()["detail"] == "Manager role required."
 
 
 def test_failed_payments_recorded():
@@ -190,14 +218,61 @@ def test_failed_payments_recorded():
         "amount": 15000.00,
         "payment_method": "credit_card",
     })
-    response = client.get("/payments/manager/failed-payments")
+    db = TestingSessionLocal()
+    try:
+        manager = create_test_user(db, "manager_failed", "manager")
+    finally:
+        db.close()
+
+    response = client.get(
+        "/payments/manager/failed-payments",
+        headers={"X-User-Id": str(manager.id)},
+    )
     assert response.status_code == 200
     failed = response.json()
     assert len(failed) >= 1
     assert failed[0]["status"] == "failed"
 
 
+def test_regular_user_blocked_from_failed_payments():
+    db = TestingSessionLocal()
+    try:
+        regular_user = create_test_user(db, "regular_failed", "user")
+    finally:
+        db.close()
+
+    response = client.get(
+        "/payments/manager/failed-payments",
+        headers={"X-User-Id": str(regular_user.id)},
+    )
+
+    assert response.status_code == 403
+    assert response.json()["detail"] == "Manager role required."
+
+
 def test_no_failed_payments():
-    response = client.get("/payments/manager/failed-payments")
+    db = TestingSessionLocal()
+    try:
+        manager = create_test_user(db, "manager_empty_failed", "manager")
+    finally:
+        db.close()
+
+    response = client.get(
+        "/payments/manager/failed-payments",
+        headers={"X-User-Id": str(manager.id)},
+    )
     assert response.status_code == 200
     assert response.json() == []
+
+def create_test_user(db, username, role):
+    user = User(
+        username=username,
+        hashed_password=hash_password("TestPass123"),
+        role=role,
+        is_manager=(role == "manager"),
+    )
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    return user
+

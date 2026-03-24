@@ -1,6 +1,7 @@
 from fastapi import APIRouter
-from schemas.order_schema import OrderCreate
-from services.order_service import OrderService
+from backend.schemas.order_schema import OrderCreate
+from backend.services.order_service import OrderService
+
 
 router = APIRouter()
 
@@ -35,4 +36,14 @@ def cancel_order(order_id: str):
     return {
         "message": "Order cancelled",
         "order": order.to_dict()
+    }
+
+@router.get("/orders/{order_id}/total")
+def get_order_total(order_id: str):
+
+    pricing = OrderService.calculate_order_total(order_id)
+
+    return {
+        "order_id": order_id,
+        "pricing": pricing
     }
