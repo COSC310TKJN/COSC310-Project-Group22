@@ -12,6 +12,7 @@ from backend.schemas.user_schema import (
 )
 
 router = APIRouter()
+logged_in_users: set[int] = set()
 
 
 def get_current_user(
@@ -24,6 +25,8 @@ def get_current_user(
     user = db.query(User).filter(User.id == x_user_id).first()
     if user is None:
         raise HTTPException(status_code=401, detail="Invalid user credentials.")
+    if user.id not in logged_in_users:
+        raise HTTPException(status_code=401, detail="Login required.")
 
     return user
 
@@ -70,6 +73,7 @@ def login_user(
     user = db.query(User).filter(User.username == payload.username).first()
     if user is None or not verify_password(payload.password, user.hashed_password):
         raise HTTPException(status_code=401, detail="Invalid username or password.")
+    logged_in_users.add(user.id)
 
     return UserLoginResponse(
         id=user.id,
@@ -77,6 +81,12 @@ def login_user(
         is_manager=user.is_manager,
         role=user.role,
     )
+
+
+@router.post("/auth/logout")
+def logout_user(current_user: User = Depends(get_current_user)) -> dict[str, str]:
+    logged_in_users.discard(current_user.id)
+    return {"message": "Logout successful."}
 
 
 @router.get("/portal/user")
