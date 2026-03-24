@@ -53,7 +53,6 @@ def test_browse_restaurants():
 
 
 def test_filter_by_cuisine():
-    """Feat3-FR3: Filter returns cuisine-matching restaurants."""
     response = client.get("/restaurants/?cuisine=American")
     assert response.status_code == 200
     data = response.json()
