@@ -98,3 +98,29 @@ def test_role_based_endpoint_access_control(test_context):
 
     manager_portal_response = client.get("/portal/manager", headers={"X-User-Id": str(manager_id)})
     assert manager_portal_response.status_code == 200
+
+    blocked_paid_orders_response = client.get(
+        "/payments/manager/orders",
+        headers={"X-User-Id": str(user_id)},
+    )
+    assert blocked_paid_orders_response.status_code == 403
+    assert blocked_paid_orders_response.json()["detail"] == "Manager role required."
+
+    manager_paid_orders_response = client.get(
+        "/payments/manager/orders",
+        headers={"X-User-Id": str(manager_id)},
+    )
+    assert manager_paid_orders_response.status_code == 200
+
+    blocked_failed_payments_response = client.get(
+        "/payments/manager/failed-payments",
+        headers={"X-User-Id": str(user_id)},
+    )
+    assert blocked_failed_payments_response.status_code == 403
+    assert blocked_failed_payments_response.json()["detail"] == "Manager role required."
+
+    manager_failed_payments_response = client.get(
+        "/payments/manager/failed-payments",
+        headers={"X-User-Id": str(manager_id)},
+    )
+    assert manager_failed_payments_response.status_code == 200

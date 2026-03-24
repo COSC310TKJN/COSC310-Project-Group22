@@ -5,6 +5,9 @@ from backend.app.database import get_db
 from backend.schemas.payment_schema import PaymentRequest, PaymentResponse, PaymentStatusResponse
 from backend.schemas.receipt_schema import ReceiptResponse
 from backend.services import payment_service, receipt_service
+from backend.app.routes.auth_routes import require_manager
+from backend.models.user import User
+
 
 router = APIRouter(prefix="/payments", tags=["Payments"])
 
@@ -36,13 +39,15 @@ def get_order_receipt(order_id: int, db: Session = Depends(get_db)):
 
 
 @router.get("/manager/orders")
-def get_paid_orders(db: Session = Depends(get_db)):
+def get_paid_orders(db: Session = Depends(get_db),
+                    current_user: User = Depends(require_manager)):
     payments = payment_service.get_paid_orders(db)
     return [{"order_id": p.order_id, "amount": p.amount, "status": p.status} for p in payments]
 
 
 @router.get("/manager/failed-payments")
-def get_failed_payments(db: Session = Depends(get_db)):
+def get_failed_payments(db: Session = Depends(get_db),
+                        current_user: User = Depends(require_manager)):
     payments = payment_service.get_failed_payments(db)
     return [{"order_id": p.order_id, "amount": p.amount, "status": p.status, "transaction_id": p.transaction_id} for p in payments]
 
