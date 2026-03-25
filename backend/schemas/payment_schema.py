@@ -21,10 +21,8 @@ class PaymentResponse(BaseModel):
     payment_method: str
     status: str
     transaction_id: str
-    created_at: datetime
+    created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
-
-    model_config = {"from_attributes": True}
 
 
 class PaymentStatusResponse(BaseModel):
@@ -32,7 +30,5 @@ class PaymentStatusResponse(BaseModel):
     order_id: int
     status: str
     transaction_id: Optional[str] = None
-    created_at: datetime
+    created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
-
-    model_config = {"from_attributes": True}

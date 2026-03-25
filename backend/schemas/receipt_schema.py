@@ -15,5 +15,3 @@ class ReceiptResponse(BaseModel):
     total: float
     payment_method: str
     issued_at: Optional[datetime] = None
-
-    model_config = {"from_attributes": True}

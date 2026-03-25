@@ -15,8 +15,6 @@ class NotificationResponse(BaseModel):
     order_id: Optional[int] = None
     created_at: Optional[datetime] = None
 
-    model_config = {"from_attributes": True}
-
 
 class PreferenceRequest(BaseModel):
     notification_type: str
@@ -30,5 +28,3 @@ class PreferenceResponse(BaseModel):
     notification_type: str
     enabled: bool
     channel: str
-
-    model_config = {"from_attributes": True}

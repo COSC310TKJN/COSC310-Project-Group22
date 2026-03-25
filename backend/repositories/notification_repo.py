@@ -1,52 +1,80 @@
-from sqlalchemy.orm import Session
+from datetime import datetime
 
-from backend.models.notification import Notification
-from backend.models.notification_preference import NotificationPreference
-
-
-def create_notification(db: Session, notification: Notification) -> Notification:
-    db.add(notification)
-    db.commit()
-    db.refresh(notification)
-    return notification
+notifications = []
+preferences = []
+_next_id = 0
+_pref_next_id = 0
 
 
-def get_notifications_by_user(db: Session, user_id: str):
-    return db.query(Notification).filter(Notification.user_id == user_id).order_by(Notification.created_at.desc()).all()
+def _get_next_id():
+    global _next_id
+    _next_id += 1
+    return _next_id
 
 
-def get_unread_count(db: Session, user_id: str) -> int:
-    return db.query(Notification).filter(Notification.user_id == user_id, Notification.is_read == False).count()
+def _get_pref_next_id():
+    global _pref_next_id
+    _pref_next_id += 1
+    return _pref_next_id
 
 
-def mark_as_read(db: Session, notification_id: int) -> Notification | None:
-    notification = db.query(Notification).filter(Notification.id == notification_id).first()
-    if notification:
-        notification.is_read = True
-        db.commit()
-        db.refresh(notification)
-    return notification
+def create_notification(data):
+    data["id"] = _get_next_id()
+    data["is_read"] = False
+    data["created_at"] = datetime.now().isoformat()
+    notifications.append(data)
+    return data
 
 
-def get_preference(db: Session, user_id: str, notification_type: str):
-    return db.query(NotificationPreference).filter(
-        NotificationPreference.user_id == user_id,
-        NotificationPreference.notification_type == notification_type,
-    ).first()
+def get_notifications_by_user(user_id):
+    results = [n for n in notifications if n["user_id"] == user_id]
+    return sorted(results, key=lambda x: x["created_at"], reverse=True)
 
 
-def get_preferences_by_user(db: Session, user_id: str):
-    return db.query(NotificationPreference).filter(NotificationPreference.user_id == user_id).all()
+def get_unread_count(user_id):
+    return sum(1 for n in notifications
+               if n["user_id"] == user_id and not n["is_read"])
 
 
-def upsert_preference(db: Session, user_id: str, notification_type: str, enabled: bool, channel: str):
-    pref = get_preference(db, user_id, notification_type)
-    if pref:
-        pref.enabled = enabled
-        pref.channel = channel
-    else:
-        pref = NotificationPreference(user_id=user_id, notification_type=notification_type, enabled=enabled, channel=channel)
-        db.add(pref)
-    db.commit()
-    db.refresh(pref)
+def mark_as_read(notification_id):
+    for n in notifications:
+        if n["id"] == notification_id:
+            n["is_read"] = True
+            return n
+    return None
+
+
+def get_preference(user_id, notification_type):
+    for p in preferences:
+        if p["user_id"] == user_id and p["notification_type"] == notification_type:
+            return p
+    return None
+
+
+def get_preferences_by_user(user_id):
+    return [p for p in preferences if p["user_id"] == user_id]
+
+
+def upsert_preference(user_id, notification_type, enabled, channel):
+    for p in preferences:
+        if p["user_id"] == user_id and p["notification_type"] == notification_type:
+            p["enabled"] = enabled
+            p["channel"] = channel
+            return p
+    pref = {
+        "id": _get_pref_next_id(),
+        "user_id": user_id,
+        "notification_type": notification_type,
+        "enabled": enabled,
+        "channel": channel,
+    }
+    preferences.append(pref)
     return pref
+
+
+def clear():
+    global _next_id, _pref_next_id
+    notifications.clear()
+    preferences.clear()
+    _next_id = 0
+    _pref_next_id = 0

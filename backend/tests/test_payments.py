@@ -3,12 +3,12 @@ from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from backend.app.database import Base, get_db
 from backend.app.main import app
+from backend.app.database import Base, get_db
 from backend.app.routes import auth_routes
 from backend.models.user import User
 from backend.app.security import hash_password
-
+from backend.repositories import payment_repo, receipt_repo
 
 TEST_DATABASE_URL = "sqlite:///./test.db"
 engine = create_engine(TEST_DATABASE_URL, connect_args={"check_same_thread": False})
@@ -28,9 +28,13 @@ client = TestClient(app)
 
 
 @pytest.fixture(autouse=True)
-def setup_db():
+def clean_data():
     Base.metadata.create_all(bind=engine)
+    payment_repo.clear()
+    receipt_repo.clear()
     yield
+    payment_repo.clear()
+    receipt_repo.clear()
     auth_routes.logged_in_users.clear()
     Base.metadata.drop_all(bind=engine)
 
@@ -271,6 +275,7 @@ def test_no_failed_payments():
     assert response.status_code == 200
     assert response.json() == []
 
+
 def create_test_user(db, username, role):
     user = User(
         username=username,
@@ -291,4 +296,3 @@ def login_test_user(username, password="TestPass123"):
     )
     assert response.status_code == 200
     return response.json()["id"]
-

@@ -1,18 +1,30 @@
-from sqlalchemy.orm import Session
+from datetime import datetime
 
-from backend.models.receipt import Receipt
-
-
-def create_receipt(db: Session, receipt: Receipt) -> Receipt:
-    db.add(receipt)
-    db.commit()
-    db.refresh(receipt)
-    return receipt
+receipts = []
+_next_id = 0
 
 
-def get_receipt_by_payment_id(db: Session, payment_id: int) -> Receipt | None:
-    return db.query(Receipt).filter(Receipt.payment_id == payment_id).first()
+def _get_next_id():
+    global _next_id
+    _next_id += 1
+    return _next_id
 
 
-def get_receipt_by_order_id(db: Session, order_id: int) -> Receipt | None:
-    return db.query(Receipt).filter(Receipt.order_id == order_id).first()
+def create_receipt(data):
+    data["id"] = _get_next_id()
+    data["issued_at"] = datetime.now().isoformat()
+    receipts.append(data)
+    return data
+
+
+def get_receipt_by_order_id(order_id):
+    for r in receipts:
+        if r["order_id"] == order_id:
+            return r
+    return None
+
+
+def clear():
+    global _next_id
+    receipts.clear()
+    _next_id = 0

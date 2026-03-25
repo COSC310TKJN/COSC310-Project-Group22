@@ -1,30 +1,29 @@
 from fastapi import HTTPException
-from sqlalchemy.orm import Session
 
-from backend.models.notification import Notification, NotificationChannel, NotificationType
+from backend.models.notification import NotificationChannel, NotificationType
 from backend.repositories import notification_repo
 
 
-def send_notification(db: Session, user_id: str, notification_type: str, title: str, message: str, order_id: int = None, channel: str = NotificationChannel.IN_APP.value):
-    pref = notification_repo.get_preference(db, user_id, notification_type)
-    if pref and not pref.enabled:
+def send_notification(user_id, notification_type, title, message,
+                      order_id=None, channel=NotificationChannel.IN_APP.value):
+    pref = notification_repo.get_preference(user_id, notification_type)
+    if pref and not pref["enabled"]:
         return None
-    if pref and pref.channel:
-        channel = pref.channel
-    notification = Notification(
-        user_id=user_id,
-        notification_type=notification_type,
-        channel=channel,
-        title=title,
-        message=message,
-        order_id=order_id,
-    )
-    return notification_repo.create_notification(db, notification)
+    if pref and pref["channel"]:
+        channel = pref["channel"]
+    data = {
+        "user_id": user_id,
+        "notification_type": notification_type,
+        "channel": channel,
+        "title": title,
+        "message": message,
+        "order_id": order_id,
+    }
+    return notification_repo.create_notification(data)
 
 
-def notify_order_placed(db: Session, user_id: str, order_id: int):
+def notify_order_placed(user_id, order_id):
     return send_notification(
-        db,
         user_id=user_id,
         notification_type=NotificationType.ORDER_PLACED.value,
         title="Order Placed",
@@ -33,9 +32,8 @@ def notify_order_placed(db: Session, user_id: str, order_id: int):
     )
 
 
-def notify_status_change(db: Session, user_id: str, order_id: int, new_status: str):
+def notify_status_change(user_id, order_id, new_status):
     return send_notification(
-        db,
         user_id=user_id,
         notification_type=NotificationType.STATUS_CHANGE.value,
         title="Order Status Updated",
@@ -44,9 +42,8 @@ def notify_status_change(db: Session, user_id: str, order_id: int, new_status: s
     )
 
 
-def notify_delivery(db: Session, user_id: str, order_id: int):
+def notify_delivery(user_id, order_id):
     return send_notification(
-        db,
         user_id=user_id,
         notification_type=NotificationType.DELIVERY.value,
         title="Order Delivered",
@@ -55,9 +52,8 @@ def notify_delivery(db: Session, user_id: str, order_id: int):
     )
 
 
-def notify_manager_new_order(db: Session, manager_id: str, order_id: int):
+def notify_manager_new_order(manager_id, order_id):
     return send_notification(
-        db,
         user_id=manager_id,
         notification_type=NotificationType.MANAGER_NEW_ORDER.value,
         title="New Order Received",
@@ -66,9 +62,8 @@ def notify_manager_new_order(db: Session, manager_id: str, order_id: int):
     )
 
 
-def notify_order_cancelled(db: Session, user_id: str, order_id: int):
+def notify_order_cancelled(user_id, order_id):
     return send_notification(
-        db,
         user_id=user_id,
         notification_type=NotificationType.ORDER_CANCELLED.value,
         title="Order Cancelled",
@@ -77,24 +72,25 @@ def notify_order_cancelled(db: Session, user_id: str, order_id: int):
     )
 
 
-def get_user_notifications(db: Session, user_id: str):
-    return notification_repo.get_notifications_by_user(db, user_id)
+def get_user_notifications(user_id):
+    return notification_repo.get_notifications_by_user(user_id)
 
 
-def get_unread_count(db: Session, user_id: str):
-    return notification_repo.get_unread_count(db, user_id)
+def get_unread_count(user_id):
+    return notification_repo.get_unread_count(user_id)
 
 
-def mark_notification_read(db: Session, notification_id: int):
-    notification = notification_repo.mark_as_read(db, notification_id)
+def mark_notification_read(notification_id):
+    notification = notification_repo.mark_as_read(notification_id)
     if not notification:
         raise HTTPException(status_code=404, detail="Notification not found")
     return notification
 
 
-def get_preferences(db: Session, user_id: str):
-    return notification_repo.get_preferences_by_user(db, user_id)
+def get_preferences(user_id):
+    return notification_repo.get_preferences_by_user(user_id)
 
 
-def update_preference(db: Session, user_id: str, notification_type: str, enabled: bool, channel: str):
-    return notification_repo.upsert_preference(db, user_id, notification_type, enabled, channel)
+def update_preference(user_id, notification_type, enabled, channel):
+    return notification_repo.upsert_preference(
+        user_id, notification_type, enabled, channel)
