@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, Header, HTTPException
 
+from backend.app.auth_session import is_logged_in, login_session, logout_session
 from backend.app.roles import Role
 from backend.app.security import hash_password, verify_password
 from backend.app.user_storage import append_user, find_user_by_id, find_user_by_username, next_user_id
@@ -12,23 +13,6 @@ from backend.schemas.user_schema import (
 )
 
 router = APIRouter()
-logged_in_users: set[int] = set()
-
-
-def login_session(user_id: int) -> None:
-    logged_in_users.add(user_id)
-
-
-def logout_session(user_id: int) -> None:
-    logged_in_users.discard(user_id)
-
-
-def is_logged_in(user_id: int) -> bool:
-    return user_id in logged_in_users
-
-
-def clear_sessions() -> None:
-    logged_in_users.clear()
 
 
 def get_current_user(

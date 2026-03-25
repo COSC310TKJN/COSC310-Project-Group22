@@ -1,6 +1,7 @@
 import pytest
 from fastapi import HTTPException
 
+from backend.app import auth_session
 from backend.app.roles import Role
 from backend.app.routes import auth_routes
 from backend.app.security import hash_password
@@ -23,7 +24,7 @@ def seed_user(username: str, password: str, role: str = Role.USER) -> User:
 
 def test_get_current_user_returns_user(test_context):
     user = seed_user("current_user", "Password123")
-    auth_routes.login_session(user.id)
+    auth_session.login_session(user.id)
 
     current_user = auth_routes.get_current_user(x_user_id=user.id)
 
@@ -126,7 +127,7 @@ def test_login_user_returns_existing_user(test_context):
     assert response.username == "login_user"
     assert response.role == Role.USER
     assert response.is_manager is False
-    assert auth_routes.is_logged_in(user.id) is True
+    assert auth_session.is_logged_in(user.id) is True
 
 
 def test_login_user_rejects_invalid_credentials(test_context):
@@ -143,12 +144,12 @@ def test_login_user_rejects_invalid_credentials(test_context):
 
 def test_logout_user_removes_logged_in_user(test_context):
     user = seed_user("logout_user", "StrongPass123")
-    auth_routes.login_session(user.id)
+    auth_session.login_session(user.id)
 
     response = auth_routes.logout_user(user)
 
     assert response == {"message": "Logout successful."}
-    assert auth_routes.is_logged_in(user.id) is False
+    assert auth_session.is_logged_in(user.id) is False
 
 
 def test_user_portal_returns_message():

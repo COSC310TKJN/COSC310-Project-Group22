@@ -3,10 +3,10 @@ from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
+from backend.app import auth_session
 from backend.app.roles import Role
 from backend.app.main import app
 from backend.app.database import Base, get_db
-from backend.app.routes import auth_routes
 from backend.app.user_storage import append_user, next_user_id
 from backend.models.user import User
 from backend.app.security import hash_password
@@ -37,7 +37,7 @@ def clean_data():
     yield
     payment_repo.clear()
     receipt_repo.clear()
-    auth_routes.clear_sessions()
+    auth_session.clear_sessions()
     Base.metadata.drop_all(bind=engine)
 
 
@@ -191,11 +191,11 @@ def test_manager_sees_paid_orders():
         manager = create_test_user(db, "manager_orders", "manager")
     finally:
         db.close()
-    login_test_user("manager_orders")
+    manager_id = login_test_user("manager_orders")
 
     response = client.get(
         "/payments/manager/orders",
-        headers={"X-User-Id": str(manager.id)},
+        headers={"X-User-Id": str(manager_id)},
     )
     assert response.status_code == 200
     orders = response.json()
@@ -210,11 +210,11 @@ def test_regular_user_blocked_from_paid_orders():
         regular_user = create_test_user(db, "regular_orders", "user")
     finally:
         db.close()
-    login_test_user("regular_orders")
+    regular_user_id = login_test_user("regular_orders")
 
     response = client.get(
         "/payments/manager/orders",
-        headers={"X-User-Id": str(regular_user.id)},
+        headers={"X-User-Id": str(regular_user_id)},
     )
 
     assert response.status_code == 403
@@ -233,11 +233,11 @@ def test_failed_payments_recorded():
         manager = create_test_user(db, "manager_failed", "manager")
     finally:
         db.close()
-    login_test_user("manager_failed")
+    manager_id = login_test_user("manager_failed")
 
     response = client.get(
         "/payments/manager/failed-payments",
-        headers={"X-User-Id": str(manager.id)},
+        headers={"X-User-Id": str(manager_id)},
     )
     assert response.status_code == 200
     failed = response.json()
@@ -251,11 +251,11 @@ def test_regular_user_blocked_from_failed_payments():
         regular_user = create_test_user(db, "regular_failed", "user")
     finally:
         db.close()
-    login_test_user("regular_failed")
+    regular_user_id = login_test_user("regular_failed")
 
     response = client.get(
         "/payments/manager/failed-payments",
-        headers={"X-User-Id": str(regular_user.id)},
+        headers={"X-User-Id": str(regular_user_id)},
     )
 
     assert response.status_code == 403
@@ -268,11 +268,11 @@ def test_no_failed_payments():
         manager = create_test_user(db, "manager_empty_failed", "manager")
     finally:
         db.close()
-    login_test_user("manager_empty_failed")
+    manager_id = login_test_user("manager_empty_failed")
 
     response = client.get(
         "/payments/manager/failed-payments",
-        headers={"X-User-Id": str(manager.id)},
+        headers={"X-User-Id": str(manager_id)},
     )
     assert response.status_code == 200
     assert response.json() == []
