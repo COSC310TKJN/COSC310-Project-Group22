@@ -1,7 +1,11 @@
-from fastapi.testclient import TestClient
-from sqlalchemy.orm import Session
+import csv
 
-from backend.models.user import User
+from fastapi.testclient import TestClient
+
+
+def read_users_csv(csv_path):
+    with csv_path.open(newline="", encoding="utf-8") as csv_file:
+        return list(csv.DictReader(csv_file))
 
 
 def login_user(client: TestClient, username: str, password: str) -> int:
@@ -15,7 +19,7 @@ def login_user(client: TestClient, username: str, password: str) -> int:
 
 def test_register_user_success_persists_user_record(test_context):
     client: TestClient = test_context["client"]
-    session_local = test_context["SessionLocal"]
+    auth_users_csv_path = test_context["auth_users_csv_path"]
 
     response = client.post(
         "/auth/register",
@@ -29,14 +33,11 @@ def test_register_user_success_persists_user_record(test_context):
     assert response_body["role"] == "user"
     assert response_body["message"] == "User registered successfully."
 
-    db: Session = session_local()
-    try:
-        stored_user = db.query(User).filter(User.username == "alice_123").first()
-        assert stored_user is not None
-        assert stored_user.role == "user"
-        assert stored_user.hashed_password != "StrongPass123"
-    finally:
-        db.close()
+    stored_users = read_users_csv(auth_users_csv_path)
+    assert len(stored_users) == 1
+    assert stored_users[0]["username"] == "alice_123"
+    assert stored_users[0]["role"] == "user"
+    assert stored_users[0]["hashed_password"] != "StrongPass123"
 
 
 def test_register_user_duplicate_username_rejected(test_context):
@@ -59,7 +60,7 @@ def test_register_user_duplicate_username_rejected(test_context):
 
 def test_register_user_manager_role_is_assigned_and_stored(test_context):
     client: TestClient = test_context["client"]
-    session_local = test_context["SessionLocal"]
+    auth_users_csv_path = test_context["auth_users_csv_path"]
 
     response = client.post(
         "/auth/register",
@@ -71,14 +72,11 @@ def test_register_user_manager_role_is_assigned_and_stored(test_context):
     assert response_body["role"] == "manager"
     assert response_body["is_manager"] is True
 
-    db: Session = session_local()
-    try:
-        stored_user = db.query(User).filter(User.username == "owner_1").first()
-        assert stored_user is not None
-        assert stored_user.role == "manager"
-        assert stored_user.is_manager is True
-    finally:
-        db.close()
+    stored_users = read_users_csv(auth_users_csv_path)
+    assert len(stored_users) == 1
+    assert stored_users[0]["username"] == "owner_1"
+    assert stored_users[0]["role"] == "manager"
+    assert stored_users[0]["is_manager"] == "True"
 
 
 def test_role_based_endpoint_access_control(test_context):

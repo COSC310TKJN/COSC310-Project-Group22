@@ -1,7 +1,9 @@
-from fastapi import APIRouter, Depends, Header, HTTPException
-from sqlalchemy.orm import Session
+import csv
+import os
+from pathlib import Path
 
-from backend.app.database import get_db
+from fastapi import APIRouter, Depends, Header, HTTPException
+
 from backend.app.security import hash_password, verify_password
 from backend.models.user import User
 from backend.schemas.user_schema import (
@@ -13,16 +15,82 @@ from backend.schemas.user_schema import (
 
 router = APIRouter()
 logged_in_users: set[int] = set()
+USER_HEADERS = ["id", "username", "hashed_password", "role", "is_manager"]
+
+
+def _get_users_csv_path() -> Path:
+    return Path(os.environ.get("AUTH_USERS_CSV_PATH", "data/users.csv"))
+
+
+def _ensure_users_csv_exists() -> Path:
+    path = _get_users_csv_path()
+    path.parent.mkdir(parents=True, exist_ok=True)
+    if not path.exists() or path.stat().st_size == 0:
+        with path.open("w", newline="", encoding="utf-8") as csv_file:
+            writer = csv.DictWriter(csv_file, fieldnames=USER_HEADERS)
+            writer.writeheader()
+    return path
+
+
+def _row_to_user(row: dict[str, str]) -> User:
+    return User(
+        id=int(row["id"]),
+        username=row["username"],
+        hashed_password=row["hashed_password"],
+        role=row["role"],
+        is_manager=row["is_manager"] == "True",
+    )
+
+
+def _user_to_row(user: User) -> dict[str, str]:
+    return {
+        "id": str(user.id),
+        "username": user.username,
+        "hashed_password": user.hashed_password,
+        "role": user.role,
+        "is_manager": str(user.is_manager),
+    }
+
+
+def _load_users() -> list[User]:
+    path = _ensure_users_csv_exists()
+    with path.open(newline="", encoding="utf-8") as csv_file:
+        return [_row_to_user(row) for row in csv.DictReader(csv_file)]
+
+
+def _find_user_by_id(user_id: int) -> User | None:
+    for user in _load_users():
+        if user.id == user_id:
+            return user
+    return None
+
+
+def _find_user_by_username(username: str) -> User | None:
+    for user in _load_users():
+        if user.username == username:
+            return user
+    return None
+
+
+def _next_user_id() -> int:
+    users = _load_users()
+    return max((user.id for user in users), default=0) + 1
+
+
+def _append_user(user: User) -> None:
+    path = _ensure_users_csv_exists()
+    with path.open("a", newline="", encoding="utf-8") as csv_file:
+        writer = csv.DictWriter(csv_file, fieldnames=USER_HEADERS)
+        writer.writerow(_user_to_row(user))
 
 
 def get_current_user(
     x_user_id: int | None = Header(default=None, alias="X-User-Id"),
-    db: Session = Depends(get_db),
 ) -> User:
     if x_user_id is None:
         raise HTTPException(status_code=401, detail="Authentication required.")
 
-    user = db.query(User).filter(User.id == x_user_id).first()
+    user = _find_user_by_id(x_user_id)
     if user is None:
         raise HTTPException(status_code=401, detail="Invalid user credentials.")
     if user.id not in logged_in_users:
@@ -41,21 +109,19 @@ def require_manager(current_user: User = Depends(get_current_user)) -> User:
 @router.post("/auth/register", response_model=UserRegisterResponse, status_code=201)
 def register_user(
     payload: UserRegisterRequest,
-    db: Session = Depends(get_db),
 ) -> UserRegisterResponse:
-    existing_user = db.query(User).filter(User.username == payload.username).first()
+    existing_user = _find_user_by_username(payload.username)
     if existing_user is not None:
         raise HTTPException(status_code=409, detail="Username already exists.")
 
     user = User(
+        id=_next_user_id(),
         username=payload.username,
         hashed_password=hash_password(payload.password),
         role=payload.role,
         is_manager=payload.role == "manager",
     )
-    db.add(user)
-    db.commit()
-    db.refresh(user)
+    _append_user(user)
 
     return UserRegisterResponse(
         id=user.id,
@@ -68,9 +134,8 @@ def register_user(
 @router.post("/auth/login", response_model=UserLoginResponse)
 def login_user(
     payload: UserLoginRequest,
-    db: Session = Depends(get_db),
 ) -> UserLoginResponse:
-    user = db.query(User).filter(User.username == payload.username).first()
+    user = _find_user_by_username(payload.username)
     if user is None or not verify_password(payload.password, user.hashed_password):
         raise HTTPException(status_code=401, detail="Invalid username or password.")
     logged_in_users.add(user.id)
