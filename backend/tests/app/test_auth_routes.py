@@ -4,19 +4,20 @@ from fastapi import HTTPException
 from backend.app.roles import Role
 from backend.app.routes import auth_routes
 from backend.app.security import hash_password
+from backend.app.user_storage import append_user, find_user_by_username, next_user_id
 from backend.models.user import User
 from backend.schemas.user_schema import UserLoginRequest, UserRegisterRequest
 
 
 def seed_user(username: str, password: str, role: str = Role.USER) -> User:
     user = User(
-        id=auth_routes._next_user_id(),
+        id=next_user_id(),
         username=username,
         hashed_password=hash_password(password),
         role=role,
         is_manager=role == Role.MANAGER,
     )
-    auth_routes._append_user(user)
+    append_user(user)
     return user
 
 
@@ -85,7 +86,7 @@ def test_register_user_creates_regular_user(test_context):
     assert response.role == Role.USER
     assert response.is_manager is False
 
-    stored_user = auth_routes._find_user_by_username("new_user")
+    stored_user = find_user_by_username("new_user")
     assert stored_user is not None
     assert stored_user.hashed_password == hash_password("StrongPass123")
 
