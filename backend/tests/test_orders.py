@@ -1,11 +1,22 @@
 import unittest
 import pytest
+import os
 from pydantic import ValidationError
 from backend.models.order import Order, OrderStatus
 from backend.routes.order_routes import create_order
 from backend.schemas.order_schema import OrderCreate
 from backend.services.order_service import OrderService, orders_db
 
+
+@pytest.fixture(autouse=True)
+def clear_data():
+    yield
+    json_path = os.path.join(
+        os.path.dirname(__file__),
+        "../repositories/orders.json"
+    )
+    if os.path.exists(json_path):
+        os.remove(json_path)
 
 
 class TestOrders(unittest.TestCase):
@@ -102,55 +113,30 @@ class TestOrders(unittest.TestCase):
         with self.assertRaises(ValidationError):
 
             OrderCreate(
-            order_id="6",
-            restaurant_id=10,
-            food_item="Burger",
-            order_time="2025-03-11T12:00:00",
-            order_value="twenty",
-            delivery_method="car",
-            delivery_distance=4,
-            customer_id="C6"
-        )
-            
-    @staticmethod
-    def create_order(order_data):
-
-        if order_data.customer_id == "INVALID":
-            raise ValueError("Customer is not eligible")
-
-        order = Order(
-            order_id=order_data.order_id,
-            restaurant_id=order_data.restaurant_id,
-            food_item=order_data.food_item,
-            order_time=order_data.order_time,
-            order_value=order_data.order_value,
-            delivery_method=order_data.delivery_method,
-            delivery_distance=order_data.delivery_distance,
-            customer_id=order_data.customer_id,
-            traffic_condition=order_data.traffic_condition,
-            weather_condition=order_data.weather_condition,
-            route_taken=order_data.route_taken
-        )
-
-        orders_db[order.order_id] = order
-        return order
-    
+                order_id="6",
+                restaurant_id=10,
+                food_item="Burger",
+                order_time="2025-03-11T12:00:00",
+                order_value="twenty",
+                delivery_method="car",
+                delivery_distance=4,
+                customer_id="C6"
+            )
 
     def test_mixed_restaurant_rejected(self):
 
         with self.assertRaises(ValueError):
 
             OrderCreate(
-            order_id="8",
-            restaurant_id=[1, 2],
-            food_item="Pizza, Burger",
-            order_time="2025-03-11T12:00:00",
-            order_value=30,
-            delivery_method="bike",
-            delivery_distance=5,
-            customer_id="C8"
-        )
-            
+                order_id="8",
+                restaurant_id=[1, 2],
+                food_item="Pizza, Burger",
+                order_time="2025-03-11T12:00:00",
+                order_value=30,
+                delivery_method="bike",
+                delivery_distance=5,
+                customer_id="C8"
+            )
 
     def test_single_restaurant_allowed(self):
 
@@ -164,6 +150,7 @@ class TestOrders(unittest.TestCase):
             delivery_distance=3,
             customer_id="C9"
         )
+
         created_order = OrderService.create_order(order)
 
         self.assertEqual(created_order.restaurant_id, 1)
@@ -179,11 +166,11 @@ class TestOrders(unittest.TestCase):
             delivery_method="bike",
             delivery_distance=3,
             customer_id="INVALID"
-    )
+        )
 
         with pytest.raises(ValueError):
             create_order(order)
-    
+
     def test_authenticated_user_integration(self):
 
         order = OrderCreate(
@@ -195,7 +182,7 @@ class TestOrders(unittest.TestCase):
             delivery_method="car",
             delivery_distance=5,
             customer_id="AUTH_USER"
-    )
+        )
 
         is_authenticated = order.customer_id != "INVALID"
 
@@ -225,7 +212,6 @@ class TestOrders(unittest.TestCase):
         with self.assertRaises(ValueError):
             OrderService.cancel_order("9")
 
-
     def test_cancel_allowed_before_preparing(self):
 
         order = Order(
@@ -244,7 +230,6 @@ class TestOrders(unittest.TestCase):
         cancelled_order = OrderService.cancel_order("10")
 
         self.assertEqual(cancelled_order.status, OrderStatus.CANCELLED)
-
 
     def test_order_id_unique(self):
 

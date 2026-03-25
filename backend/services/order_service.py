@@ -1,7 +1,11 @@
-from models.order import Order
-from services.pricing_service import PricingService
+from fastapi import HTTPException
 
-orders_db = {}
+from backend.models.order import Order
+from backend.models.order import Order, OrderStatus
+from backend.services.pricing_service import PricingService
+from backend.repositories.order_repo import OrderRepository
+
+orders_db = OrderRepository.load_orders()
 
 
 class OrderService:
@@ -29,6 +33,9 @@ class OrderService:
 
     @staticmethod
     def get_order(order_id):
+
+        if not orders_db.get(order_id):
+            return HTTPException(status_code=404, detail="Order not found")
 
         return orders_db.get(order_id)
 
