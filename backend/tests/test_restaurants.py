@@ -7,6 +7,7 @@ from fastapi.testclient import TestClient
 
 from backend.app.main import app
 from backend.app.restaurant_storage import RestaurantRecord, append_restaurant, ensure_restaurants_csv_exists
+from backend.services.description_service import DESCRIPTION_TEMPLATES, get_item_description
 
 
 @pytest.fixture
@@ -69,6 +70,18 @@ def test_item_shows_computed_price(client_with_restaurants):
     for item in data:
         assert "estimated_price" in item
         assert item["estimated_price"] > 0
+
+
+def test_item_descriptions_match_templates(client_with_restaurants):
+    response = client_with_restaurants.get("/restaurants/1/menu")
+    assert response.status_code == 200
+    restaurant_id = 1
+    for item in response.json():
+        name = item["name"]
+        desc = item["description"]
+        assert desc
+        assert desc == get_item_description(name, restaurant_id)
+        assert desc in {template.format(item=name) for template in DESCRIPTION_TEMPLATES}
 
 
 def test_get_restaurant_detail(client_with_restaurants):
