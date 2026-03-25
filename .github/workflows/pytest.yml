@@ -2,7 +2,9 @@ name: Pytest
 
 on:
   push:
-    branches: ["test"]
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
 
 jobs:
   build:
@@ -24,6 +26,8 @@ jobs:
           pip install pytest
           pip install fastapi
           pip install pydantic
+          pip install uvicorn
+          pip install httpx
 
       - name: Run tests
         run: |
