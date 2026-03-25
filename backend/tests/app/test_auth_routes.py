@@ -1,19 +1,20 @@
 import pytest
 from fastapi import HTTPException
 
+from backend.app.roles import Role
 from backend.app.routes import auth_routes
 from backend.app.security import hash_password
 from backend.models.user import User
 from backend.schemas.user_schema import UserLoginRequest, UserRegisterRequest
 
 
-def seed_user(username: str, password: str, role: str = "user") -> User:
+def seed_user(username: str, password: str, role: str = Role.USER) -> User:
     user = User(
         id=auth_routes._next_user_id(),
         username=username,
         hashed_password=hash_password(password),
         role=role,
-        is_manager=role == "manager",
+        is_manager=role == Role.MANAGER,
     )
     auth_routes._append_user(user)
     return user
@@ -50,7 +51,7 @@ def test_require_manager_returns_manager():
         id=1,
         username="manager_user",
         hashed_password="hashed",
-        role="manager",
+        role=Role.MANAGER,
         is_manager=True,
     )
 
@@ -64,7 +65,7 @@ def test_require_manager_rejects_regular_user():
         id=1,
         username="regular_user",
         hashed_password="hashed",
-        role="user",
+        role=Role.USER,
         is_manager=False,
     )
 
@@ -76,12 +77,12 @@ def test_require_manager_rejects_regular_user():
 
 
 def test_register_user_creates_regular_user(test_context):
-    payload = UserRegisterRequest(username="new_user", password="StrongPass123", role="user")
+    payload = UserRegisterRequest(username="new_user", password="StrongPass123", role=Role.USER)
 
     response = auth_routes.register_user(payload)
 
     assert response.username == "new_user"
-    assert response.role == "user"
+    assert response.role == Role.USER
     assert response.is_manager is False
 
     stored_user = auth_routes._find_user_by_username("new_user")
@@ -95,7 +96,7 @@ def test_register_user_rejects_duplicate_username(test_context):
     payload = UserRegisterRequest(
         username="duplicate_user",
         password="AnotherPass123",
-        role="user",
+        role=Role.USER,
     )
 
     with pytest.raises(HTTPException) as error:
@@ -106,11 +107,11 @@ def test_register_user_rejects_duplicate_username(test_context):
 
 
 def test_register_user_creates_manager(test_context):
-    payload = UserRegisterRequest(username="manager_one", password="ManagerPass123", role="manager")
+    payload = UserRegisterRequest(username="manager_one", password="ManagerPass123", role=Role.MANAGER)
 
     response = auth_routes.register_user(payload)
 
-    assert response.role == "manager"
+    assert response.role == Role.MANAGER
     assert response.is_manager is True
 
 
@@ -122,7 +123,7 @@ def test_login_user_returns_existing_user(test_context):
 
     assert response.id == user.id
     assert response.username == "login_user"
-    assert response.role == "user"
+    assert response.role == Role.USER
     assert response.is_manager is False
     assert user.id in auth_routes.logged_in_users
 
@@ -154,7 +155,7 @@ def test_user_portal_returns_message():
         id=1,
         username="portal_user",
         hashed_password="hashed",
-        role="user",
+        role=Role.USER,
         is_manager=False,
     )
 
@@ -168,7 +169,7 @@ def test_manager_portal_returns_message():
         id=1,
         username="portal_manager",
         hashed_password="hashed",
-        role="manager",
+        role=Role.MANAGER,
         is_manager=True,
     )
 

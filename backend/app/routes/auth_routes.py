@@ -4,6 +4,7 @@ from pathlib import Path
 from fastapi import APIRouter, Depends, Header, HTTPException
 
 from backend.app import csv_storage
+from backend.app.roles import Role
 from backend.app.security import hash_password, verify_password
 from backend.models.user import User
 from backend.schemas.user_schema import (
@@ -111,7 +112,7 @@ def register_user(
         username=payload.username,
         hashed_password=hash_password(payload.password),
         role=payload.role,
-        is_manager=payload.role == "manager",
+        is_manager=payload.role == Role.MANAGER,
     )
     _append_user(user)
 
