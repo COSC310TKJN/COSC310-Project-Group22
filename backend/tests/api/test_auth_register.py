@@ -2,10 +2,14 @@ import csv
 
 from fastapi.testclient import TestClient
 
+from backend.app import csv_storage
+
 
 def read_users_csv(csv_path):
-    with csv_path.open(newline="", encoding="utf-8") as csv_file:
-        return list(csv.DictReader(csv_file))
+    return csv_storage.read_rows(
+        csv_path,
+        ["id", "username", "hashed_password", "role", "is_manager"],
+    )
 
 
 def login_user(client: TestClient, username: str, password: str) -> int:

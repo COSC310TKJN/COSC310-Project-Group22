@@ -1,9 +1,9 @@
-import csv
 import os
 from pathlib import Path
 
 from fastapi import APIRouter, Depends, Header, HTTPException
 
+from backend.app import csv_storage
 from backend.app.security import hash_password, verify_password
 from backend.models.user import User
 from backend.schemas.user_schema import (
@@ -24,12 +24,7 @@ def _get_users_csv_path() -> Path:
 
 def _ensure_users_csv_exists() -> Path:
     path = _get_users_csv_path()
-    path.parent.mkdir(parents=True, exist_ok=True)
-    if not path.exists() or path.stat().st_size == 0:
-        with path.open("w", newline="", encoding="utf-8") as csv_file:
-            writer = csv.DictWriter(csv_file, fieldnames=USER_HEADERS)
-            writer.writeheader()
-    return path
+    return csv_storage.ensure_csv_file(path, USER_HEADERS)
 
 
 def _row_to_user(row: dict[str, str]) -> User:
@@ -54,8 +49,7 @@ def _user_to_row(user: User) -> dict[str, str]:
 
 def _load_users() -> list[User]:
     path = _ensure_users_csv_exists()
-    with path.open(newline="", encoding="utf-8") as csv_file:
-        return [_row_to_user(row) for row in csv.DictReader(csv_file)]
+    return [_row_to_user(row) for row in csv_storage.read_rows(path, USER_HEADERS)]
 
 
 def _find_user_by_id(user_id: int) -> User | None:
@@ -73,15 +67,13 @@ def _find_user_by_username(username: str) -> User | None:
 
 
 def _next_user_id() -> int:
-    users = _load_users()
-    return max((user.id for user in users), default=0) + 1
+    rows = csv_storage.read_rows(_ensure_users_csv_exists(), USER_HEADERS)
+    return csv_storage.next_int_id(rows)
 
 
 def _append_user(user: User) -> None:
     path = _ensure_users_csv_exists()
-    with path.open("a", newline="", encoding="utf-8") as csv_file:
-        writer = csv.DictWriter(csv_file, fieldnames=USER_HEADERS)
-        writer.writerow(_user_to_row(user))
+    csv_storage.append_row(path, USER_HEADERS, _user_to_row(user))
 
 
 def get_current_user(
