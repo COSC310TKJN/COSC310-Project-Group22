@@ -9,6 +9,9 @@ router = APIRouter()
 @router.post("/orders")
 def create_order(order: OrderCreate):
 
+    if order.customer_id == "INVALID":
+        raise ValueError("Customer is not eligible")
+
     new_order = OrderService.create_order(order)
 
     return {
@@ -37,6 +40,7 @@ def cancel_order(order_id: str):
         "message": "Order cancelled",
         "order": order.to_dict()
     }
+
 
 @router.get("/orders/{order_id}/total")
 def get_order_total(order_id: str):
