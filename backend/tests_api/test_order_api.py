@@ -1,15 +1,18 @@
 import pytest
 from fastapi.testclient import TestClient
 from backend.app.main import app
+from backend.repositories.order_repo import orders_db
 
 
 client = TestClient(app)
 
 
 @pytest.fixture(autouse=True)
-def clear_data():
+def clear_data(tmp_path, monkeypatch):
+    orders_csv_path = tmp_path / "orders.csv"
+    monkeypatch.setenv("ORDERS_CSV_PATH", str(orders_csv_path))
+    orders_db.clear()
     yield
-    from backend.repositories.order_repo import orders_db
     orders_db.clear()
 
 
