@@ -46,6 +46,13 @@ def load_restaurants() -> list[RestaurantRecord]:
     return [row_to_restaurant(row) for row in csv_storage.read_rows(path, RESTAURANT_HEADERS)]
 
 
+def find_restaurant_by_id(restaurant_id: int) -> RestaurantRecord | None:
+    for restaurant in load_restaurants():
+        if restaurant.id == restaurant_id:
+            return restaurant
+    return None
+
+
 def append_restaurant(restaurant: RestaurantRecord) -> None:
     path = ensure_restaurants_csv_exists()
     csv_storage.append_row(path, RESTAURANT_HEADERS, restaurant_to_row(restaurant))

@@ -96,10 +96,18 @@ def test_manager_can_create_menu_item(test_context):
     register_user(client, "manager_menu_user", "ManagerPass123", "manager")
     manager_id = login_user(client, "manager_menu_user", "ManagerPass123")
 
+    restaurant_response = client.post(
+        "/restaurants",
+        json={"name": "Menu Test Restaurant", "cuisine_type": "Asian", "address": "Campus"},
+        headers={"X-User-Id": str(manager_id)},
+    )
+    assert restaurant_response.status_code == 201
+    restaurant_id = restaurant_response.json()["id"]
+
     response = client.post(
         "/menu-items",
         json={
-            "restaurant_id": 1,
+            "restaurant_id": restaurant_id,
             "name": "Noodles",
             "base_price": 8.0,
             "estimated_price": 8.0,
@@ -109,3 +117,25 @@ def test_manager_can_create_menu_item(test_context):
 
     assert response.status_code == 201
     assert any(menu_item.name == "Noodles" for menu_item in load_menu_items())
+
+
+def test_manager_cannot_create_menu_item_with_invalid_restaurant_id(test_context):
+    client = test_context["client"]
+
+    register_user(client, "manager_invalid_menu_user", "ManagerPass123", "manager")
+    manager_id = login_user(client, "manager_invalid_menu_user", "ManagerPass123")
+
+    response = client.post(
+        "/menu-items",
+        json={
+            "restaurant_id": 9999,
+            "name": "Ghost Noodles",
+            "base_price": 8.0,
+            "estimated_price": 8.0,
+        },
+        headers={"X-User-Id": str(manager_id)},
+    )
+
+    assert response.status_code == 400
+    assert response.json()["detail"] == "Valid restaurant_id is required."
+    assert all(menu_item.name != "Ghost Noodles" for menu_item in load_menu_items())

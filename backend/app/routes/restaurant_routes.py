@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 
 from backend.app.menu_storage import (
     MenuItemRecord,
@@ -8,6 +8,7 @@ from backend.app.menu_storage import (
 from backend.app.restaurant_storage import (
     RestaurantRecord,
     append_restaurant,
+    find_restaurant_by_id,
     next_restaurant_id,
 )
 from backend.app.routes.auth_routes import require_manager
@@ -42,6 +43,9 @@ def create_menu_item(
     payload: MenuItemCreateRequest,
     current_user: User = Depends(require_manager),
 ) -> MenuItemResponse:
+    if find_restaurant_by_id(payload.restaurant_id) is None:
+        raise HTTPException(status_code=400, detail="Valid restaurant_id is required.")
+
     menu_item = MenuItemRecord(
         id=next_menu_item_id(),
         restaurant_id=payload.restaurant_id,
