@@ -15,6 +15,22 @@ router = APIRouter()
 logged_in_users: set[int] = set()
 
 
+def login_session(user_id: int) -> None:
+    logged_in_users.add(user_id)
+
+
+def logout_session(user_id: int) -> None:
+    logged_in_users.discard(user_id)
+
+
+def is_logged_in(user_id: int) -> bool:
+    return user_id in logged_in_users
+
+
+def clear_sessions() -> None:
+    logged_in_users.clear()
+
+
 def get_current_user(
     x_user_id: int | None = Header(default=None, alias="X-User-Id"),
 ) -> User:
@@ -24,7 +40,7 @@ def get_current_user(
     user = find_user_by_id(x_user_id)
     if user is None:
         raise HTTPException(status_code=401, detail="Invalid user credentials.")
-    if user.id not in logged_in_users:
+    if not is_logged_in(user.id):
         raise HTTPException(status_code=401, detail="Login required.")
 
     return user
@@ -69,7 +85,7 @@ def login_user(
     user = find_user_by_username(payload.username)
     if user is None or not verify_password(payload.password, user.hashed_password):
         raise HTTPException(status_code=401, detail="Invalid username or password.")
-    logged_in_users.add(user.id)
+    login_session(user.id)
 
     return UserLoginResponse(
         id=user.id,
@@ -81,7 +97,7 @@ def login_user(
 
 @router.post("/auth/logout")
 def logout_user(current_user: User = Depends(get_current_user)) -> dict[str, str]:
-    logged_in_users.discard(current_user.id)
+    logout_session(current_user.id)
     return {"message": "Logout successful."}
 
 
