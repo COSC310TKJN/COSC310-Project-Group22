@@ -15,6 +15,15 @@ class MenuItemResponse(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class MenuItemCreateRequest(BaseModel):
+    restaurant_id: int
+    name: str
+    base_price: float
+    estimated_price: float
+    description: Optional[str] = None
+    category: Optional[str] = None
+
+
 class MenuItemListResponse(BaseModel):
     id: int
     name: str
@@ -31,6 +40,12 @@ class RestaurantResponse(BaseModel):
     address: Optional[str] = None
 
     model_config = {"from_attributes": True}
+
+
+class RestaurantCreateRequest(BaseModel):
+    name: str
+    cuisine_type: str
+    address: Optional[str] = None
 
 
 class RestaurantDetailResponse(RestaurantResponse):
