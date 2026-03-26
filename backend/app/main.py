@@ -5,8 +5,8 @@ from fastapi import FastAPI
 from backend.app.config import settings
 from backend.app.database import Base, engine
 from backend.app.routes import notification_routes, payment_routes, auth_routes
-from backend.routes import delivery_routes
-from backend.app.bootstrap import check_restaurants_exist
+from backend.routes import delivery_routes, restaurant_routes
+from backend.app.bootstrap import check_restaurants_exist, check_menu_items_exist
 from backend.routes.order_routes import router as order_router
 
 Base.metadata.create_all(bind=engine)

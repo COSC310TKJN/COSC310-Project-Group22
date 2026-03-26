@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 
 from fastapi import HTTPException
 
-from backend.app.delivery_order_storage import append_status, load_status_history
+from backend.app.delivery_storage import append_status, load_status_history
 from backend.models.order import Order, OrderStatus
 from backend.repositories import order_repo
 from backend.schemas.delivery_schema import (

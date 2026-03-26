@@ -1,3 +1,4 @@
+import os
 import pytest
 from fastapi.testclient import TestClient
 
@@ -8,7 +9,9 @@ client = TestClient(app)
 
 
 @pytest.fixture(autouse=True)
-def clean_data():
+def clean_data(tmp_path):
+    os.environ["PAYMENTS_CSV_PATH"] = str(tmp_path / "payments.csv")
+    os.environ["RECEIPTS_CSV_PATH"] = str(tmp_path / "receipts.csv")
     payment_repo.clear()
     receipt_repo.clear()
     yield

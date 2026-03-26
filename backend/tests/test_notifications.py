@@ -1,3 +1,4 @@
+import os
 import pytest
 from fastapi.testclient import TestClient
 
@@ -8,7 +9,9 @@ client = TestClient(app)
 
 
 @pytest.fixture(autouse=True)
-def clean_data():
+def clean_data(tmp_path):
+    os.environ["NOTIFICATIONS_CSV_PATH"] = str(tmp_path / "notifications.csv")
+    os.environ["NOTIFICATION_PREFS_CSV_PATH"] = str(tmp_path / "preferences.csv")
     notification_repo.clear()
     yield
     notification_repo.clear()

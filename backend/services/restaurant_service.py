@@ -21,7 +21,7 @@ def _to_menu_item_response(item, estimated_price: float):
         id=item.id,
         name=item.name,
         estimated_price=estimated_price,
-        description=item.description,
+        description=item.description
         or description_service.get_item_description(item.name, item.restaurant_id),
     )
 

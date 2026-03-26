@@ -1,44 +1,29 @@
+import os
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
 
 from backend.app import auth_session
 from backend.app.roles import Role
 from backend.app.main import app
-from backend.app.database import Base, get_db
 from backend.app.user_storage import append_user, next_user_id
 from backend.models.user import User
 from backend.app.security import hash_password
 from backend.repositories import payment_repo, receipt_repo
 
-TEST_DATABASE_URL = "sqlite:///./test.db"
-engine = create_engine(TEST_DATABASE_URL, connect_args={"check_same_thread": False})
-TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-
-def override_get_db():
-    db = TestingSessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-
-app.dependency_overrides[get_db] = override_get_db
 client = TestClient(app)
 
 
 @pytest.fixture(autouse=True)
-def clean_data():
-    Base.metadata.create_all(bind=engine)
+def clean_data(tmp_path):
+    os.environ["PAYMENTS_CSV_PATH"] = str(tmp_path / "payments.csv")
+    os.environ["RECEIPTS_CSV_PATH"] = str(tmp_path / "receipts.csv")
+    os.environ["AUTH_USERS_CSV_PATH"] = str(tmp_path / "users.csv")
     payment_repo.clear()
     receipt_repo.clear()
     yield
     payment_repo.clear()
     receipt_repo.clear()
     auth_session.clear_sessions()
-    Base.metadata.drop_all(bind=engine)
 
 
 def test_successful_payment():
@@ -186,11 +171,7 @@ def test_manager_sees_paid_orders():
         "amount": 15000.00,
         "payment_method": "paypal",
     })
-    db = TestingSessionLocal()
-    try:
-        manager = create_test_user(db, "manager_orders", "manager")
-    finally:
-        db.close()
+    create_test_user("manager_orders", "manager")
     manager_id = login_test_user("manager_orders")
 
     response = client.get(
@@ -205,11 +186,7 @@ def test_manager_sees_paid_orders():
 
 
 def test_regular_user_blocked_from_paid_orders():
-    db = TestingSessionLocal()
-    try:
-        regular_user = create_test_user(db, "regular_orders", "user")
-    finally:
-        db.close()
+    create_test_user("regular_orders", "user")
     regular_user_id = login_test_user("regular_orders")
 
     response = client.get(
@@ -228,11 +205,7 @@ def test_failed_payments_recorded():
         "amount": 15000.00,
         "payment_method": "credit_card",
     })
-    db = TestingSessionLocal()
-    try:
-        manager = create_test_user(db, "manager_failed", "manager")
-    finally:
-        db.close()
+    create_test_user("manager_failed", "manager")
     manager_id = login_test_user("manager_failed")
 
     response = client.get(
@@ -246,11 +219,7 @@ def test_failed_payments_recorded():
 
 
 def test_regular_user_blocked_from_failed_payments():
-    db = TestingSessionLocal()
-    try:
-        regular_user = create_test_user(db, "regular_failed", "user")
-    finally:
-        db.close()
+    create_test_user("regular_failed", "user")
     regular_user_id = login_test_user("regular_failed")
 
     response = client.get(
@@ -263,11 +232,7 @@ def test_regular_user_blocked_from_failed_payments():
 
 
 def test_no_failed_payments():
-    db = TestingSessionLocal()
-    try:
-        manager = create_test_user(db, "manager_empty_failed", "manager")
-    finally:
-        db.close()
+    create_test_user("manager_empty_failed", "manager")
     manager_id = login_test_user("manager_empty_failed")
 
     response = client.get(
@@ -278,7 +243,7 @@ def test_no_failed_payments():
     assert response.json() == []
 
 
-def create_test_user(db, username, role):
+def create_test_user(username, role):
     user = User(
         id=next_user_id(),
         username=username,

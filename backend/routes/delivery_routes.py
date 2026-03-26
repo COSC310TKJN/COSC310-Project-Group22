@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Header
 
-from backend.app.delivery_order_storage import load_status_history
+from backend.app.delivery_storage import load_status_history
 from backend.models.order import OrderStatus
 from backend.schemas.delivery_schema import (
     DeliveryStatusUpdateRequest,
