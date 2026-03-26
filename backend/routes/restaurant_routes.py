@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 
 from backend.app.menu_storage import (
     MenuItemRecord,
@@ -12,7 +12,6 @@ from backend.app.restaurant_storage import (
     next_restaurant_id,
 )
 from backend.app.routes.auth_routes import require_manager
-from backend.models.user import User
 from backend.schemas.restaurant_schema import (
     MenuItemCreateRequest,
     MenuItemListResponse,
@@ -29,10 +28,10 @@ router = APIRouter(tags=["Restaurants"])
 
 @router.get("/restaurants/search", response_model=PaginatedRestaurantResponse)
 def search_restaurants(
-    q,
-    page=1,
-    page_size=20,
-    cuisine=None,
+    q: str = Query(...),
+    page: int = 1,
+    page_size: int = 20,
+    cuisine: str | None = None,
 ):
     return restaurant_service.search_restaurants(
         q=q, cuisine=cuisine, page=page, page_size=page_size
@@ -41,9 +40,9 @@ def search_restaurants(
 
 @router.get("/restaurants", response_model=PaginatedRestaurantResponse)
 def list_restaurants(
-    page=1,
-    page_size=20,
-    cuisine=None,
+    page: int = 1,
+    page_size: int = 20,
+    cuisine: str | None = None,
 ):
     return restaurant_service.browse_restaurants(
         cuisine=cuisine, page=page, page_size=page_size
@@ -53,8 +52,8 @@ def list_restaurants(
 @router.post("/restaurants", response_model=RestaurantResponse, status_code=201)
 def create_restaurant(
     payload: RestaurantCreateRequest,
-    current_user: User = Depends(require_manager),
-) -> RestaurantResponse:
+    current_user=Depends(require_manager),
+):
     restaurant = RestaurantRecord(
         id=next_restaurant_id(),
         name=payload.name,
@@ -66,7 +65,7 @@ def create_restaurant(
 
 
 @router.get("/restaurants/{restaurant_id}", response_model=RestaurantDetailResponse)
-def get_restaurant(restaurant_id):
+def get_restaurant(restaurant_id: int):
     return restaurant_service.get_restaurant_detail(restaurant_id)
 
 
@@ -74,15 +73,15 @@ def get_restaurant(restaurant_id):
     "/restaurants/{restaurant_id}/menu",
     response_model=list[MenuItemListResponse],
 )
-def get_restaurant_menu(restaurant_id):
+def get_restaurant_menu(restaurant_id: int):
     return restaurant_service.get_restaurant_menu(restaurant_id)
 
 
 @router.post("/menu-items", response_model=MenuItemResponse, status_code=201)
 def create_menu_item(
     payload: MenuItemCreateRequest,
-    current_user: User = Depends(require_manager),
-) -> MenuItemResponse:
+    current_user=Depends(require_manager),
+):
     if find_restaurant_by_id(payload.restaurant_id) is None:
         raise HTTPException(status_code=400, detail="Valid restaurant_id is required.")
 
