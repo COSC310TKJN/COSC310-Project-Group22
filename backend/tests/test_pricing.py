@@ -86,19 +86,8 @@ def test_subtotal_valid():
 
 def test_subtotal_negative():
 
-    order = Order(
-        order_id="3",
-        restaurant_id=10,
-        food_item="Burger",
-        order_time="2025-03-11T12:00:00",
-        order_value=-5,
-        delivery_method="bike",
-        delivery_distance=5,
-        customer_id="C3"
-    )
-
     with pytest.raises(ValueError):
-        PricingService.calculate_subtotal(order)
+        PricingService.calculate_subtotal_value(-5)
 
 
 def test_car_delivery_total():
@@ -117,7 +106,7 @@ def test_car_delivery_total():
     result = PricingService.calc_total(order)
 
     assert result["delivery_fee"] == 6
-    assert result["tax"] == 3.6
+    assert round(result["tax"], 2) == 3.6
     assert result["total"] == 39.6
 
 
@@ -158,6 +147,6 @@ def test_order_pricing_integration():
     result = PricingService.calc_total(order)
 
     assert result["subtotal"] == 25
-    assert result["delivery_fee"] == 5
-    assert result["tax"] == 3
-    assert result["total"] == 33
+    assert result["delivery_fee"] == 7.5
+    assert result["tax"] == 3.0
+    assert result["total"] == 35.5

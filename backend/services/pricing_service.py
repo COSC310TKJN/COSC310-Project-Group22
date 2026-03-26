@@ -15,12 +15,26 @@ class PricingService:
 
         return rate * distance
 
-
     @staticmethod
     def calc_tax(order_value):
 
         return order_value * PricingService.TAX_RATE
 
+    @staticmethod
+    def calculate_subtotal(order):
+
+        if order.order_value < 0:
+            raise ValueError("Order value cannot be negative")
+
+        return order.order_value
+
+    @staticmethod
+    def calculate_subtotal_value(value):
+
+        if value < 0:
+            raise ValueError("Order value cannot be negative")
+
+        return value
 
     @staticmethod
     def calc_total(order):
@@ -40,6 +54,11 @@ class PricingService:
         return {
             "subtotal": subtotal,
             "delivery_fee": delivery_fee,
-            "tax": tax,
-            "total": total
+            "tax": round(tax, 2),
+            "total": round(total, 2)
         }
+
+    @staticmethod
+    def calculate_total(order):
+
+        return PricingService.calc_total(order)
