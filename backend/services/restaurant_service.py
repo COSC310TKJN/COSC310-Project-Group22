@@ -12,6 +12,8 @@ from backend.schemas.restaurant_schema import (
 )
 from backend.services.pricing_service import PricingService
 from backend.services import virtual_menu
+from backend.services import description_service
+
 
 
 def _to_menu_item_response(item, estimated_price: float):
@@ -20,6 +22,7 @@ def _to_menu_item_response(item, estimated_price: float):
         name=item.name,
         estimated_price=estimated_price,
         description=item.description,
+        or description_service.get_item_description(item.name, item.restaurant_id),
     )
 
 
