@@ -1,0 +1,1 @@
+order_id,restaurant_id,food_item,order_time,order_value,delivery_method,delivery_distance,customer_id,traffic_condition,weather_condition,route_taken,status
