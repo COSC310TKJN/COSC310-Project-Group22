@@ -168,7 +168,7 @@ class TestOrders(unittest.TestCase):
 
         self.assertEqual(created_order.restaurant_id, 1)
 
-    def test_unauthenticated_user_pytest():
+    def test_unauthenticated_user_pytest(self):
 
         order = OrderCreate(
             order_id="7",
