@@ -1,12 +1,8 @@
-from sqlalchemy import Column, Float, Integer, String
-
-from backend.app.database import Base
+from dataclasses import dataclass
 
 
-class Restaurant(Base):
-    __tablename__ = "restaurants"
-
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, nullable=False)
-    cuisine_type = Column(String, nullable=False, index=True)
-    address = Column(String, nullable=True)
+class Restaurant:
+    id: int
+    name: str
+    cuisine_type: str
+    address: str | None = None

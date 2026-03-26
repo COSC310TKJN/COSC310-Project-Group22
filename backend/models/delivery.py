@@ -1,35 +1,28 @@
-from sqlalchemy import Column, DateTime, Float, ForeignKey, Integer, String
-from sqlalchemy.orm import relationship
-from sqlalchemy.sql import func
+from __future__ import annotations
 
-from backend.app.database import Base
+from dataclasses import dataclass, field
+from datetime import datetime
+
 from backend.models.order import OrderStatus
 
-class OrderDB(Base):
-  __tablename__ = "orders"
-  
-  id = Column(Integer, primary_key=True, index=True)
-  customer_id = Column(String, nullable=False, index=True)
-  current_status = Column(String, nullable=False, default=OrderStatus.CREATED.value)
-  restaurant_id = Column(Integer, nullable=True)
-  food_item = Column(String, nullable=True)
-  order_value = Column(Float, nullable=True)
-  order_time = Column(DateTime, server_default=func.now())
-  update_time = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
-status_history = relationship(
-        "DeliveryStatusUpdate",
-        back_populates="order",
-        order_by="DeliveryStatusUpdate.update_time",
-    )
+class DeliveryStatusUpdate:
+    order_id: int
+    status: str
+    update_time: datetime
+    updated_by: str | None = None
+    id: int | None = None
 
-class DeliveryStatusUpdate(Base):
-__tablename__ = "delivery_status_updates"
 
-id = Column(Integer, primary_key=True, index=True)
-order_id = Column(Integer, ForeignKey("orders.id", ondelete="CASCADE"), nullable=False, index=True)
-status = Column(String, nullable=False)
-update_time = Column(DateTime, server_default=func.now())
-updated_by = Column(String, nullable=True)
+class OrderDB:
+    id: int
+    customer_id: str
+    current_status: str = OrderStatus.CREATED.value
+    restaurant_id: int | None = None
+    food_item: str | None = None
+    order_value: float | None = None
+    order_time: datetime | None = None
+    update_time: datetime | None = None
+    status_history: list[DeliveryStatusUpdate] = field(default_factory=list)
 
-order = relationship("OrderDB", back_populates="status_history")
+
