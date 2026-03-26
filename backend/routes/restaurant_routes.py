@@ -24,7 +24,7 @@ from backend.schemas.restaurant_schema import (
 )
 from backend.services import restaurant_service
 
-router = APIRouter(prefix="/restaurants", tags=["Restaurants"])
+router = APIRouter(tags=["Restaurants"])
 
 
 @router.get("/restaurants/search", response_model=PaginatedRestaurantResponse)
@@ -52,9 +52,9 @@ def list_restaurants(
 
 @router.post("/restaurants", response_model=RestaurantResponse, status_code=201)
 def create_restaurant(
-    payload,
-    current_user=Depends(require_manager),
-):
+    payload: RestaurantCreateRequest,
+    current_user: User = Depends(require_manager),
+) -> RestaurantResponse:
     restaurant = RestaurantRecord(
         id=next_restaurant_id(),
         name=payload.name,
@@ -80,9 +80,9 @@ def get_restaurant_menu(restaurant_id):
 
 @router.post("/menu-items", response_model=MenuItemResponse, status_code=201)
 def create_menu_item(
-    payload,
-    current_user=Depends(require_manager),
-):
+    payload: MenuItemCreateRequest,
+    current_user: User = Depends(require_manager),
+) -> MenuItemResponse:
     if find_restaurant_by_id(payload.restaurant_id) is None:
         raise HTTPException(status_code=400, detail="Valid restaurant_id is required.")
 
