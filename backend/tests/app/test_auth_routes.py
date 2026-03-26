@@ -23,7 +23,7 @@ def seed_user(username: str, password: str, role: str = Role.USER) -> User:
 
 def test_get_current_user_returns_user(test_context):
     user = seed_user("current_user", "Password123")
-    auth_routes.logged_in_users.add(user.id)
+    auth_routes.login_session(user.id)
 
     current_user = auth_routes.get_current_user(x_user_id=user.id)
 
@@ -126,7 +126,7 @@ def test_login_user_returns_existing_user(test_context):
     assert response.username == "login_user"
     assert response.role == Role.USER
     assert response.is_manager is False
-    assert user.id in auth_routes.logged_in_users
+    assert auth_routes.is_logged_in(user.id) is True
 
 
 def test_login_user_rejects_invalid_credentials(test_context):
@@ -143,12 +143,12 @@ def test_login_user_rejects_invalid_credentials(test_context):
 
 def test_logout_user_removes_logged_in_user(test_context):
     user = seed_user("logout_user", "StrongPass123")
-    auth_routes.logged_in_users.add(user.id)
+    auth_routes.login_session(user.id)
 
     response = auth_routes.logout_user(user)
 
     assert response == {"message": "Logout successful."}
-    assert user.id not in auth_routes.logged_in_users
+    assert auth_routes.is_logged_in(user.id) is False
 
 
 def test_user_portal_returns_message():

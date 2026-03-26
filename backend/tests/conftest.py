@@ -72,7 +72,7 @@ def test_context():
         else:
             os.environ["MENU_ITEMS_CSV_PATH"] = previous_menu_items_csv_path
         app.dependency_overrides.clear()
-        auth_routes.logged_in_users.clear()
+        auth_routes.clear_sessions()
         Base.metadata.drop_all(bind=test_engine)
         test_engine.dispose()
         os.remove(temp_db_path)

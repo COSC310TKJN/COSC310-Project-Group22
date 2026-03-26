@@ -3,9 +3,11 @@ from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
+from backend.app.roles import Role
 from backend.app.main import app
 from backend.app.database import Base, get_db
 from backend.app.routes import auth_routes
+from backend.app.user_storage import append_user, next_user_id
 from backend.models.user import User
 from backend.app.security import hash_password
 from backend.repositories import payment_repo, receipt_repo
@@ -35,7 +37,7 @@ def clean_data():
     yield
     payment_repo.clear()
     receipt_repo.clear()
-    auth_routes.logged_in_users.clear()
+    auth_routes.clear_sessions()
     Base.metadata.drop_all(bind=engine)
 
 
@@ -278,14 +280,13 @@ def test_no_failed_payments():
 
 def create_test_user(db, username, role):
     user = User(
+        id=next_user_id(),
         username=username,
         hashed_password=hash_password("TestPass123"),
         role=role,
-        is_manager=(role == "manager"),
+        is_manager=(role == Role.MANAGER),
     )
-    db.add(user)
-    db.commit()
-    db.refresh(user)
+    append_user(user)
     return user
 
 
