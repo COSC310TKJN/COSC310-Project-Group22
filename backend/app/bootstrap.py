@@ -1,25 +1,22 @@
 import os
-from backend.app.database import SessionLocal
-from backend.models.restaurant import Restaurant
+
+from backend.app.restaurant_storage import RestaurantRecord, append_restaurant, load_restaurants
 
 CUISINES = ["American", "Asian", "Italian", "Mediterranean", "Mexican"]
+
 
 def check_restaurants_exist() -> None:
     if os.environ.get("SKIP_RESTAURANT_BOOTSTRAP"):
         return
-    db = SessionLocal()
-    try:
-        if db.query(Restaurant).count() > 0:
-            return
-        for rid in range(1, 101):
-            db.add(
-                Restaurant(
-                    id=rid,
-                    name=f"Restaurant {rid}",
-                    cuisine_type=CUISINES[(rid - 1) % len(CUISINES)],
-                    address=f"City {(rid % 10) + 1}, Street {rid}",
-                )
+    if load_restaurants():
+        return
+
+    for rid in range(1, 101):
+        append_restaurant(
+            RestaurantRecord(
+                id=rid,
+                name=f"Restaurant {rid}",
+                cuisine_type=CUISINES[(rid - 1) % len(CUISINES)],
+                address=f"City {(rid % 10) + 1}, Street {rid}",
             )
-        db.commit()
-    finally:
-        db.close()
+        )
