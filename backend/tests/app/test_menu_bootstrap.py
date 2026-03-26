@@ -1,5 +1,7 @@
 import csv
 
+import pytest
+
 from backend.app.bootstrap import check_menu_items_exist, check_restaurants_exist
 from backend.app.menu_storage import (
     MENU_ITEM_HEADERS,
@@ -112,3 +114,57 @@ def test_menu_data_persists_by_restaurant_and_next_id_advances(monkeypatch, tmp_
         )
     ]
     assert next_menu_item_id() == 22
+
+
+def test_append_menu_item_rejects_negative_base_price(monkeypatch, tmp_path):
+    menu_items_csv_path = tmp_path / "menu_items.csv"
+    monkeypatch.setenv("MENU_ITEMS_CSV_PATH", str(menu_items_csv_path))
+
+    with pytest.raises(ValueError, match="base_price"):
+        append_menu_item(
+            MenuItemRecord(
+                id=30,
+                restaurant_id=4,
+                name="Invalid Soup",
+                base_price=-1.0,
+                estimated_price=9.5,
+            )
+        )
+
+    assert load_menu_items() == []
+
+
+def test_append_menu_item_rejects_negative_estimated_price(monkeypatch, tmp_path):
+    menu_items_csv_path = tmp_path / "menu_items.csv"
+    monkeypatch.setenv("MENU_ITEMS_CSV_PATH", str(menu_items_csv_path))
+
+    with pytest.raises(ValueError, match="estimated_price"):
+        append_menu_item(
+            MenuItemRecord(
+                id=31,
+                restaurant_id=4,
+                name="Invalid Salad",
+                base_price=9.5,
+                estimated_price=-1.0,
+            )
+        )
+
+    assert load_menu_items() == []
+
+
+def test_append_menu_item_rejects_empty_name(monkeypatch, tmp_path):
+    menu_items_csv_path = tmp_path / "menu_items.csv"
+    monkeypatch.setenv("MENU_ITEMS_CSV_PATH", str(menu_items_csv_path))
+
+    with pytest.raises(ValueError, match="name"):
+        append_menu_item(
+            MenuItemRecord(
+                id=32,
+                restaurant_id=4,
+                name="   ",
+                base_price=9.5,
+                estimated_price=9.5,
+            )
+        )
+
+    assert load_menu_items() == []

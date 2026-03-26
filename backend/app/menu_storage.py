@@ -26,6 +26,15 @@ class MenuItemRecord:
     category: str | None = None
 
 
+def validate_menu_item(menu_item: MenuItemRecord) -> None:
+    if not menu_item.name.strip():
+        raise ValueError("Menu item name cannot be empty.")
+    if menu_item.base_price < 0:
+        raise ValueError("Menu item base_price cannot be negative.")
+    if menu_item.estimated_price < 0:
+        raise ValueError("Menu item estimated_price cannot be negative.")
+
+
 def get_menu_items_csv_path() -> Path:
     return Path(os.environ.get("MENU_ITEMS_CSV_PATH", "data/menu_items.csv"))
 
@@ -68,6 +77,7 @@ def load_menu_items_for_restaurant(restaurant_id: int) -> list[MenuItemRecord]:
 
 
 def append_menu_item(menu_item: MenuItemRecord) -> None:
+    validate_menu_item(menu_item)
     path = ensure_menu_items_csv_exists()
     csv_storage.append_row(path, MENU_ITEM_HEADERS, menu_item_to_row(menu_item))
 
