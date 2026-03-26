@@ -1,36 +1,24 @@
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
 
-from backend.app.database import Base, get_db
 from backend.app.main import app
-
-TEST_DATABASE_URL = "sqlite:///./test_delivery.db"
-engine = create_engine(TEST_DATABASE_URL, connect_args={"check_same_thread": False})
-TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-
-def override_get_db():
-    db = TestingSessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-
-app.dependency_overrides[get_db] = override_get_db
-client = TestClient(app)
 
 
 @pytest.fixture(autouse=True)
-def setup_db():
-    Base.metadata.create_all(bind=engine)
-    yield
-    Base.metadata.drop_all(bind=engine)
+def delivery_csv_isolated(monkeypatch, tmp_path):
+    orders_path = tmp_path / "delivery_orders.csv"
+    status_path = tmp_path / "delivery_status_updates.csv"
+    monkeypatch.setenv("DELIVERY_ORDERS_CSV_PATH", str(orders_path))
+    monkeypatch.setenv("DELIVERY_STATUS_UPDATES_CSV_PATH", str(status_path))
 
 
-def test_create_order_and_get_status():
+@pytest.fixture
+def client():
+    with TestClient(app) as test_client:
+        yield test_client
+
+
+def test_create_order_and_get_status(client):
     r = client.post("/orders/", json={"customer_id": "C1", "food_item": "Pizza"})
     assert r.status_code == 201
     order_id = r.json()["id"]
@@ -40,7 +28,7 @@ def test_create_order_and_get_status():
     assert r.json()["order_id"] == order_id
 
 
-def test_tracking_includes_timestamps():
+def test_tracking_includes_timestamps(client):
     r = client.post("/orders/", json={"customer_id": "C2"})
     assert r.status_code == 201
     order_id = r.json()["id"]
@@ -52,7 +40,7 @@ def test_tracking_includes_timestamps():
     assert "updated_at" in history[0]
 
 
-def test_authorized_role_can_update_status():
+def test_authorized_role_can_update_status(client):
     r = client.post("/orders/", json={"customer_id": "C3"})
     order_id = r.json()["id"]
     r = client.patch(
@@ -65,7 +53,7 @@ def test_authorized_role_can_update_status():
     assert r.json()["previous_status"] == "created"
 
 
-def test_reject_unauthorized_update():
+def test_reject_unauthorized_update(client):
     r = client.post("/orders/", json={"customer_id": "C4"})
     order_id = r.json()["id"]
     r = client.patch(
@@ -81,7 +69,7 @@ def test_reject_unauthorized_update():
     assert r.status_code == 403
 
 
-def test_lock_delivered_order():
+def test_lock_delivered_order(client):
     r = client.post("/orders/", json={"customer_id": "C5"})
     order_id = r.json()["id"]
     for status in ["paid", "preparing", "out_for_delivery", "delivered"]:
