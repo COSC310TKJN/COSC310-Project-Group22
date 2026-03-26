@@ -21,12 +21,11 @@ class PricingService:
         return order_value * PricingService.TAX_RATE
 
     @staticmethod
-    def calculate_estimated_price(base_price):
-    if base_price < 0:
-        raise ValueError("Base price cannot be negative")
-    return round(base_price + PricingService.calc_tax(base_price), 2)
+    def calculate_estimated_price(base_price: float) -> float:
+        if base_price < 0:
+            raise ValueError("Base price cannot be negative")
+        return round(base_price + PricingService.calc_tax(base_price), 2)
 
-    
     @staticmethod
     def calculate_subtotal(order):
 
