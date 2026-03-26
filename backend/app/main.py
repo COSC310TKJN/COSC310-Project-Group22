@@ -1,3 +1,5 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 
 from backend.app.config import settings
@@ -8,7 +10,15 @@ from backend.routes.order_routes import router as order_router
 
 Base.metadata.create_all(bind=engine)
 
-app = FastAPI(title=settings.APP_NAME)
+
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    check_restaurants_exist()
+    check_menu_items_exist()
+    yield
+
+
+app = FastAPI(title=settings.APP_NAME, lifespan=lifespan)
 
 app.include_router(payment_routes.router)
 app.include_router(auth_routes.router)

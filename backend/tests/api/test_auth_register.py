@@ -1,7 +1,17 @@
-from fastapi.testclient import TestClient
-from sqlalchemy.orm import Session
+import csv
 
-from backend.models.user import User
+from fastapi.testclient import TestClient
+
+from backend.app.roles import Role
+from backend.app.user_storage import USER_HEADERS
+from backend.app import csv_storage
+
+
+def read_users_csv(csv_path):
+    return csv_storage.read_rows(
+        csv_path,
+        USER_HEADERS,
+    )
 
 
 def login_user(client: TestClient, username: str, password: str) -> int:
@@ -15,7 +25,7 @@ def login_user(client: TestClient, username: str, password: str) -> int:
 
 def test_register_user_success_persists_user_record(test_context):
     client: TestClient = test_context["client"]
-    session_local = test_context["SessionLocal"]
+    auth_users_csv_path = test_context["auth_users_csv_path"]
 
     response = client.post(
         "/auth/register",
@@ -26,17 +36,14 @@ def test_register_user_success_persists_user_record(test_context):
     response_body = response.json()
     assert response_body["username"] == "alice_123"
     assert response_body["is_manager"] is False
-    assert response_body["role"] == "user"
+    assert response_body["role"] == Role.USER
     assert response_body["message"] == "User registered successfully."
 
-    db: Session = session_local()
-    try:
-        stored_user = db.query(User).filter(User.username == "alice_123").first()
-        assert stored_user is not None
-        assert stored_user.role == "user"
-        assert stored_user.hashed_password != "StrongPass123"
-    finally:
-        db.close()
+    stored_users = read_users_csv(auth_users_csv_path)
+    assert len(stored_users) == 1
+    assert stored_users[0]["username"] == "alice_123"
+    assert stored_users[0]["role"] == Role.USER
+    assert stored_users[0]["hashed_password"] != "StrongPass123"
 
 
 def test_register_user_duplicate_username_rejected(test_context):
@@ -59,26 +66,23 @@ def test_register_user_duplicate_username_rejected(test_context):
 
 def test_register_user_manager_role_is_assigned_and_stored(test_context):
     client: TestClient = test_context["client"]
-    session_local = test_context["SessionLocal"]
+    auth_users_csv_path = test_context["auth_users_csv_path"]
 
     response = client.post(
         "/auth/register",
-        json={"username": "owner_1", "password": "ManagerPass123", "role": "manager"},
+        json={"username": "owner_1", "password": "ManagerPass123", "role": Role.MANAGER},
     )
 
     assert response.status_code == 201
     response_body = response.json()
-    assert response_body["role"] == "manager"
+    assert response_body["role"] == Role.MANAGER
     assert response_body["is_manager"] is True
 
-    db: Session = session_local()
-    try:
-        stored_user = db.query(User).filter(User.username == "owner_1").first()
-        assert stored_user is not None
-        assert stored_user.role == "manager"
-        assert stored_user.is_manager is True
-    finally:
-        db.close()
+    stored_users = read_users_csv(auth_users_csv_path)
+    assert len(stored_users) == 1
+    assert stored_users[0]["username"] == "owner_1"
+    assert stored_users[0]["role"] == Role.MANAGER
+    assert stored_users[0]["is_manager"] == "True"
 
 
 def test_role_based_endpoint_access_control(test_context):
@@ -86,14 +90,14 @@ def test_role_based_endpoint_access_control(test_context):
 
     user_response = client.post(
         "/auth/register",
-        json={"username": "regular_user", "password": "RegularPass123", "role": "user"},
+        json={"username": "regular_user", "password": "RegularPass123", "role": Role.USER},
     )
     assert user_response.status_code == 201
     user_id = login_user(client, "regular_user", "RegularPass123")
 
     manager_response = client.post(
         "/auth/register",
-        json={"username": "restaurant_owner", "password": "OwnerPass123", "role": "manager"},
+        json={"username": "restaurant_owner", "password": "OwnerPass123", "role": Role.MANAGER},
     )
     assert manager_response.status_code == 201
     manager_id = login_user(client, "restaurant_owner", "OwnerPass123")
@@ -152,7 +156,7 @@ def test_login_succeeds_with_valid_credentials(test_context):
     assert response.status_code == 200
     response_body = response.json()
     assert response_body["username"] == "login_user"
-    assert response_body["role"] == "user"
+    assert response_body["role"] == Role.USER
     assert response_body["is_manager"] is False
     assert response_body["message"] == "Login successful."
 

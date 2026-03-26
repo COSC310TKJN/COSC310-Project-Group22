@@ -20,7 +20,10 @@ class PricingService:
     def calc_tax(order_value):
 
         return order_value * PricingService.TAX_RATE
-
+        
+    @staticmethod
+    def calculate_estimated_price(base_price):
+        return round(float(base_price) * (1 + PricingService.TAX_RATE), 2)
 
     @staticmethod
     def calc_total(order):
