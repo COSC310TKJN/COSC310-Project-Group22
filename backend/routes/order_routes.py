@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
 from backend.schemas.order_schema import OrderCreate
 from backend.services.order_service import OrderService
 
@@ -10,7 +10,7 @@ router = APIRouter()
 def create_order(order: OrderCreate):
 
     if order.customer_id == "INVALID":
-        raise HTTPException(status_code=422, detail="Customer is not eligible")
+        raise ValueError("Customer is not eligible")
 
     new_order = OrderService.create_order(order)
 
@@ -26,7 +26,7 @@ def get_order(order_id: str):
     order = OrderService.get_order(order_id)
 
     if not order:
-        raise HTTPException(status_code=404, detail="Order not found")
+        return {"error": "Order not found"}
 
     return order.to_dict()
 
