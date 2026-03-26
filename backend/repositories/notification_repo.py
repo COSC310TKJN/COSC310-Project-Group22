@@ -15,15 +15,15 @@ PREFERENCE_HEADERS = [
 ]
 
 
-def get_notifications_csv_path():
+def get_notifications_csv_path() -> Path:
     return Path(os.environ.get("NOTIFICATIONS_CSV_PATH", "data/notifications.csv"))
 
 
-def get_preferences_csv_path():
+def get_preferences_csv_path() -> Path:
     return Path(os.environ.get("NOTIFICATION_PREFS_CSV_PATH", "data/notification_preferences.csv"))
 
 
-def _notif_row_to_dict(row):
+def _notif_row_to_dict(row: dict[str, str]) -> dict:
     order_id = row["order_id"]
     return {
         "id": int(row["id"]),
@@ -38,7 +38,7 @@ def _notif_row_to_dict(row):
     }
 
 
-def _notif_to_row(d):
+def _notif_to_row(d: dict) -> dict[str, str]:
     return {
         "id": str(d["id"]),
         "user_id": d["user_id"],
@@ -52,7 +52,7 @@ def _notif_to_row(d):
     }
 
 
-def _pref_row_to_dict(row):
+def _pref_row_to_dict(row: dict[str, str]) -> dict:
     return {
         "id": int(row["id"]),
         "user_id": row["user_id"],
@@ -62,7 +62,7 @@ def _pref_row_to_dict(row):
     }
 
 
-def _pref_to_row(d):
+def _pref_to_row(d: dict) -> dict[str, str]:
     return {
         "id": str(d["id"]),
         "user_id": d["user_id"],
@@ -72,19 +72,19 @@ def _pref_to_row(d):
     }
 
 
-def _load_notifications():
+def _load_notifications() -> list[dict]:
     path = get_notifications_csv_path()
     csv_storage.ensure_csv_file(path, NOTIFICATION_HEADERS)
     return [_notif_row_to_dict(r) for r in csv_storage.read_rows(path, NOTIFICATION_HEADERS)]
 
 
-def _load_preferences():
+def _load_preferences() -> list[dict]:
     path = get_preferences_csv_path()
     csv_storage.ensure_csv_file(path, PREFERENCE_HEADERS)
     return [_pref_row_to_dict(r) for r in csv_storage.read_rows(path, PREFERENCE_HEADERS)]
 
 
-def _save_notifications(notifications):
+def _save_notifications(notifications: list[dict]) -> None:
     path = get_notifications_csv_path()
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", newline="", encoding="utf-8") as f:
@@ -94,7 +94,7 @@ def _save_notifications(notifications):
             writer.writerow(_notif_to_row(n))
 
 
-def _save_preferences(preferences):
+def _save_preferences(preferences: list[dict]) -> None:
     path = get_preferences_csv_path()
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", newline="", encoding="utf-8") as f:
@@ -104,7 +104,7 @@ def _save_preferences(preferences):
             writer.writerow(_pref_to_row(p))
 
 
-def create_notification(data):
+def create_notification(data: dict) -> dict:
     path = get_notifications_csv_path()
     rows = csv_storage.read_rows(path, NOTIFICATION_HEADERS)
     data["id"] = csv_storage.next_int_id(rows)
@@ -114,17 +114,17 @@ def create_notification(data):
     return data
 
 
-def get_notifications_by_user(user_id):
+def get_notifications_by_user(user_id: str) -> list[dict]:
     results = [n for n in _load_notifications() if n["user_id"] == user_id]
     return sorted(results, key=lambda x: x["created_at"], reverse=True)
 
 
-def get_unread_count(user_id):
+def get_unread_count(user_id: str) -> int:
     return sum(1 for n in _load_notifications()
                if n["user_id"] == user_id and not n["is_read"])
 
 
-def mark_as_read(notification_id):
+def mark_as_read(notification_id: int) -> dict | None:
     notifications = _load_notifications()
     for n in notifications:
         if n["id"] == notification_id:
@@ -134,18 +134,18 @@ def mark_as_read(notification_id):
     return None
 
 
-def get_preference(user_id, notification_type):
+def get_preference(user_id: str, notification_type: str) -> dict | None:
     for p in _load_preferences():
         if p["user_id"] == user_id and p["notification_type"] == notification_type:
             return p
     return None
 
 
-def get_preferences_by_user(user_id):
+def get_preferences_by_user(user_id: str) -> list[dict]:
     return [p for p in _load_preferences() if p["user_id"] == user_id]
 
 
-def upsert_preference(user_id, notification_type, enabled, channel):
+def upsert_preference(user_id: str, notification_type: str, enabled: bool, channel: str) -> dict:
     preferences = _load_preferences()
     for p in preferences:
         if p["user_id"] == user_id and p["notification_type"] == notification_type:
@@ -166,7 +166,7 @@ def upsert_preference(user_id, notification_type, enabled, channel):
     return pref
 
 
-def clear():
+def clear() -> None:
     for path, headers in [
         (get_notifications_csv_path(), NOTIFICATION_HEADERS),
         (get_preferences_csv_path(), PREFERENCE_HEADERS),
