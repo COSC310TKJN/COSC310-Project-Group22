@@ -42,7 +42,7 @@ class OrderRecord:
 class StatusHistoryEntry:
     status: str
     updated_at: datetime
-    updated_by_role = None
+    updated_by_role: str | None = None
 
 
 def _orders_path():
