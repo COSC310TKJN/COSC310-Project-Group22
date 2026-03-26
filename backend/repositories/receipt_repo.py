@@ -11,11 +11,11 @@ RECEIPT_HEADERS = [
 ]
 
 
-def get_csv_path():
+def get_csv_path() -> Path:
     return Path(os.environ.get("RECEIPTS_CSV_PATH", "data/receipts.csv"))
 
 
-def _row_to_dict(row):
+def _row_to_dict(row: dict[str, str]) -> dict:
     return {
         "id": int(row["id"]),
         "payment_id": int(row["payment_id"]),
@@ -30,17 +30,17 @@ def _row_to_dict(row):
     }
 
 
-def _dict_to_row(d):
+def _dict_to_row(d: dict) -> dict[str, str]:
     return {k: str(v) for k, v in d.items()}
 
 
-def _load_all():
+def _load_all() -> list[dict]:
     path = get_csv_path()
     csv_storage.ensure_csv_file(path, RECEIPT_HEADERS)
     return [_row_to_dict(r) for r in csv_storage.read_rows(path, RECEIPT_HEADERS)]
 
 
-def create_receipt(data):
+def create_receipt(data: dict) -> dict:
     path = get_csv_path()
     rows = csv_storage.read_rows(path, RECEIPT_HEADERS)
     data["id"] = csv_storage.next_int_id(rows)
@@ -49,14 +49,14 @@ def create_receipt(data):
     return data
 
 
-def get_receipt_by_order_id(order_id):
+def get_receipt_by_order_id(order_id: int) -> dict | None:
     for r in _load_all():
         if r["order_id"] == order_id:
             return r
     return None
 
 
-def clear():
+def clear() -> None:
     path = get_csv_path()
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", newline="", encoding="utf-8") as f:
