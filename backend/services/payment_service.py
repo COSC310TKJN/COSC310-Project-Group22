@@ -7,7 +7,7 @@ from backend.repositories import payment_repo
 from backend.services import receipt_service
 
 
-def process_payment(request):
+def process_payment(request) -> dict:
     existing = payment_repo.get_payment_by_order_id(request.order_id)
     if existing:
         raise HTTPException(status_code=400, detail="Payment already exists for this order")
@@ -32,26 +32,26 @@ def process_payment(request):
     return payment
 
 
-def get_payment_status(payment_id):
+def get_payment_status(payment_id: int) -> dict:
     payment = payment_repo.get_payment_by_id(payment_id)
     if not payment:
         raise HTTPException(status_code=404, detail="Payment not found")
     return payment
 
 
-def get_payment_by_order(order_id):
+def get_payment_by_order(order_id: int) -> dict:
     payment = payment_repo.get_payment_by_order_id(order_id)
     if not payment:
         raise HTTPException(status_code=404, detail="Payment not found for this order")
     return payment
 
 
-def get_available_methods():
+def get_available_methods() -> list[dict]:
     return [{"name": m.value, "label": m.name.replace("_", " ").title()}
             for m in PaymentMethod]
 
 
-def validate_order_paid(order_id):
+def validate_order_paid(order_id: int) -> dict:
     payment = payment_repo.get_payment_by_order_id(order_id)
     if not payment:
         return {"order_id": order_id, "is_paid": False,
@@ -63,15 +63,15 @@ def validate_order_paid(order_id):
             "message": "Payment completed"}
 
 
-def get_paid_orders():
+def get_paid_orders() -> list[dict]:
     return payment_repo.get_payments_by_status(PaymentStatus.COMPLETED.value)
 
 
-def get_failed_payments():
+def get_failed_payments() -> list[dict]:
     return payment_repo.get_payments_by_status(PaymentStatus.FAILED.value)
 
 
-def _simulate_payment(method, amount):
+def _simulate_payment(method: str, amount: float) -> PaymentStatus:
     if amount > 10000:
         return PaymentStatus.FAILED
     return PaymentStatus.COMPLETED
