@@ -2,14 +2,15 @@ import csv
 
 from fastapi.testclient import TestClient
 
-from backend.app import csv_storage
 from backend.app.roles import Role
+from backend.app.user_storage import USER_HEADERS
+from backend.app import csv_storage
 
 
 def read_users_csv(csv_path):
     return csv_storage.read_rows(
         csv_path,
-        ["id", "username", "hashed_password", "role", "is_manager"],
+        USER_HEADERS,
     )
 
 
