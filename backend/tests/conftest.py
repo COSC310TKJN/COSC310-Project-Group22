@@ -9,9 +9,9 @@ from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
+from backend.app import auth_session
 from backend.app.database import Base, get_db
 from backend.app.main import app
-from backend.app.routes import auth_routes
 
 
 @pytest.fixture()
@@ -72,7 +72,7 @@ def test_context():
         else:
             os.environ["MENU_ITEMS_CSV_PATH"] = previous_menu_items_csv_path
         app.dependency_overrides.clear()
-        auth_routes.clear_sessions()
+        auth_session.clear_sessions()
         Base.metadata.drop_all(bind=test_engine)
         test_engine.dispose()
         os.remove(temp_db_path)
