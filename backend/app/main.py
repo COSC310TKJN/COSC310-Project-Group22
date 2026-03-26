@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from backend.app.config import settings
 from backend.app.database import Base, engine
 from backend.app.routes import notification_routes, payment_routes, auth_routes
-from backend.app.bootstrap import check_restaurants_exist
+from backend.app.bootstrap import check_menu_items_exist, check_restaurants_exist
 
 Base.metadata.create_all(bind=engine)
 
@@ -13,6 +13,7 @@ Base.metadata.create_all(bind=engine)
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     check_restaurants_exist()
+    check_menu_items_exist()
     yield
 
 
