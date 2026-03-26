@@ -53,7 +53,7 @@ class OrderService:
         if not order:
             raise ValueError("Order not found")
 
-        return PricingService.calculate_total(order)
+        return PricingService.calc_total(order)
     
     @staticmethod
     def update_order(order_id, updates):
