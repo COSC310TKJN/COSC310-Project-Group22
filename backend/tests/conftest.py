@@ -11,12 +11,23 @@ with tempfile.NamedTemporaryFile(suffix=".csv", delete=False) as _orders_csv:
     _ORDERS_CSV_SESSION = _orders_csv.name
 os.environ.setdefault("ORDERS_CSV_PATH", _ORDERS_CSV_SESSION)
 
-from backend.app import auth_session
-from backend.app.main import app
+from backend.repositories.order_repo import orders_db
+
+
+@pytest.fixture(autouse=True)
+def clear_data(tmp_path, monkeypatch):
+    orders_csv_path = tmp_path / "orders.csv"
+    monkeypatch.setenv("ORDERS_CSV_PATH", str(orders_csv_path))
+    orders_db.clear()
+    yield
+    orders_db.clear()
 
 
 @pytest.fixture()
 def test_context():
+    from backend.app import auth_session
+    from backend.app.main import app
+
     with tempfile.NamedTemporaryFile(suffix=".csv", delete=False) as temp_users_csv:
         temp_users_csv_path = temp_users_csv.name
     with tempfile.NamedTemporaryFile(suffix=".csv", delete=False) as temp_restaurants_csv:
