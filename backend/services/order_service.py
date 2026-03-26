@@ -1,5 +1,6 @@
-from models.order import Order
-from services.pricing_service import PricingService
+from backend.models.order import Order
+from backend.models.order import Order, OrderStatus
+from backend.services.pricing_service import PricingService
 
 orders_db = {}
 
@@ -52,4 +53,15 @@ class OrderService:
         if not order:
             raise ValueError("Order not found")
 
-        return PricingService.calculate_total(order)
+        return PricingService.calc_total(order)
+    
+    @staticmethod
+    def update_order(order_id, updates):
+        order = orders_db.get(order_id)
+        if not order:
+            raise ValueError("Order not found")
+        if order.status == OrderStatus.COMPLETED:
+            raise ValueError("Cannot modify a completed order")
+        for key, value in updates.items():
+            setattr(order, key, value)
+        return order

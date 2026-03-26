@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from backend.schemas.order_schema import OrderCreate
 from backend.services.order_service import OrderService
 
@@ -8,6 +8,9 @@ router = APIRouter()
 
 @router.post("/orders")
 def create_order(order: OrderCreate):
+
+    if order.customer_id == "INVALID":
+        raise HTTPException(status_code=422, detail="Customer is not eligible")
 
     new_order = OrderService.create_order(order)
 
@@ -23,7 +26,7 @@ def get_order(order_id: str):
     order = OrderService.get_order(order_id)
 
     if not order:
-        return {"error": "Order not found"}
+        raise HTTPException(status_code=404, detail="Order not found")
 
     return order.to_dict()
 
@@ -37,6 +40,7 @@ def cancel_order(order_id: str):
         "message": "Order cancelled",
         "order": order.to_dict()
     }
+
 
 @router.get("/orders/{order_id}/total")
 def get_order_total(order_id: str):
