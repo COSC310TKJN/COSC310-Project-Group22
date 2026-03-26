@@ -1,4 +1,5 @@
 import unittest
+from fastapi import HTTPException
 import pytest
 import os
 from pydantic import ValidationError
@@ -152,7 +153,6 @@ class TestOrders(unittest.TestCase):
         self.assertEqual(created_order.restaurant_id, 1)
 
     def test_unauthenticated_user_pytest(self):
-
         order = OrderCreate(
             order_id="7",
             restaurant_id=10,
@@ -164,8 +164,11 @@ class TestOrders(unittest.TestCase):
             customer_id="INVALID"
         )
 
-        with pytest.raises(ValueError):
+        with pytest.raises(HTTPException) as exc_info:
             create_order(order)
+
+        assert exc_info.value.status_code == 400
+        assert exc_info.value.detail == "Customer is not eligible"
 
     def test_authenticated_user_integration(self):
 
