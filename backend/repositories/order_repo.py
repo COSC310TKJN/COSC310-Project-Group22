@@ -12,6 +12,7 @@ ORDER_HEADERS = [
     "delivery_method",
     "delivery_distance",
     "customer_id",
+    "source_order_id",
     "traffic_condition",
     "weather_condition",
     "route_taken",
@@ -43,6 +44,7 @@ def row_to_order(row: dict) -> Order:
         delivery_method=row["delivery_method"],
         delivery_distance=float(row["delivery_distance"]),
         customer_id=row["customer_id"],
+        source_order_id=row.get("source_order_id") or None,
         traffic_condition=row["traffic_condition"] or None,
         weather_condition=row["weather_condition"] or None,
         route_taken=row["route_taken"] or None
@@ -61,6 +63,7 @@ def order_to_row(order: Order) -> dict:
         "delivery_method": order.delivery_method,
         "delivery_distance": str(order.delivery_distance),
         "customer_id": order.customer_id,
+        "source_order_id": order.source_order_id or "",
         "traffic_condition": order.traffic_condition or "",
         "weather_condition": order.weather_condition or "",
         "route_taken": order.route_taken or "",

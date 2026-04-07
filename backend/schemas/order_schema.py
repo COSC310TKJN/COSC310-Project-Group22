@@ -22,6 +22,7 @@ class OrderCreate(BaseModel):
     delivery_method: str
     delivery_distance: float
     customer_id: str
+    source_order_id: Optional[str] = None
 
     traffic_condition: Optional[str] = None
     weather_condition: Optional[str] = None
@@ -38,4 +39,15 @@ class OrderResponse(BaseModel):
     delivery_method: str
     delivery_distance: float
     customer_id: str
+    source_order_id: Optional[str] = None
     status: str
+
+
+class ReorderDraftRequest(BaseModel):
+    customer_id: str
+
+
+class ReorderDraftUpdate(BaseModel):
+    order_time: Optional[str] = None
+    delivery_method: Optional[str] = None
+    delivery_distance: Optional[float] = None

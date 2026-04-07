@@ -2,6 +2,7 @@ import pytest
 from fastapi.testclient import TestClient
 from backend.app.main import app
 from backend.repositories.order_repo import orders_db
+from backend.services.order_service import reorder_drafts
 
 client = TestClient(app)
 
@@ -9,8 +10,10 @@ client = TestClient(app)
 @pytest.fixture(autouse=True)
 def clear_data():
     orders_db.clear()
+    reorder_drafts.clear()
     yield
     orders_db.clear()
+    reorder_drafts.clear()
 
 
 def test_create_order_api():
