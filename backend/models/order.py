@@ -21,6 +21,7 @@ class Order:
         delivery_method: str,
         delivery_distance: float,
         customer_id: str,
+        source_order_id: str = None,
         traffic_condition: str = None,
         weather_condition: str = None,
         route_taken: str = None
@@ -45,6 +46,7 @@ class Order:
         self.delivery_method = delivery_method
         self.delivery_distance = delivery_distance
         self.customer_id = customer_id
+        self.source_order_id = source_order_id
         self.traffic_condition = traffic_condition
         self.weather_condition = weather_condition
         self.route_taken = route_taken
@@ -109,5 +111,6 @@ class Order:
             "traffic_condition": self.traffic_condition,
             "weather_condition": self.weather_condition,
             "route_taken": self.route_taken,
+            "source_order_id": self.source_order_id,
             "status": self.status
             }
