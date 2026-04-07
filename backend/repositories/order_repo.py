@@ -16,6 +16,7 @@ ORDER_HEADERS = [
     "traffic_condition",
     "weather_condition",
     "route_taken",
+    "coupon_code",
     "status"
 ]
 
@@ -47,8 +48,10 @@ def row_to_order(row: dict) -> Order:
         source_order_id=row.get("source_order_id") or None,
         traffic_condition=row["traffic_condition"] or None,
         weather_condition=row["weather_condition"] or None,
-        route_taken=row["route_taken"] or None
+        route_taken=row["route_taken"] or None,
+        coupon_code=row.get("coupon_code") or None
     )
+
     order.status = OrderStatus(row["status"])
     return order
 
@@ -67,6 +70,7 @@ def order_to_row(order: Order) -> dict:
         "traffic_condition": order.traffic_condition or "",
         "weather_condition": order.weather_condition or "",
         "route_taken": order.route_taken or "",
+        "coupon_code": order.coupon_code or "",
         "status": order.status.value
     }
 

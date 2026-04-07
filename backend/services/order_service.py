@@ -3,6 +3,7 @@ import uuid
 from backend.models.order import Order, OrderStatus
 from backend.repositories.order_repo import OrderRepository, orders_db
 from backend.services.pricing_service import PricingService
+from backend.services.coupon_service import CouponService
 
 reorder_drafts = {}
 
@@ -12,6 +13,7 @@ class OrderService:
     @staticmethod
     def create_order(order_data):
         order = Order(
+            order = Order(
             order_id=order_data.order_id,
             restaurant_id=order_data.restaurant_id,
             food_item=order_data.food_item,
@@ -24,6 +26,8 @@ class OrderService:
             traffic_condition=order_data.traffic_condition,
             weather_condition=order_data.weather_condition,
             route_taken=order_data.route_taken,
+            coupon_code=getattr(order_data, "coupon_code", None),
+        )
         )
         return OrderRepository.save(order)
 
@@ -40,11 +44,21 @@ class OrderService:
         return OrderRepository.save(order)
 
     @staticmethod
+    @staticmethod
     def calculate_order_total(order_id):
+
         order = OrderRepository.find_by_id(order_id)
+
         if not order:
             raise ValueError("Order not found")
-        return PricingService.calc_total(order)
+
+        total = PricingService.calc_total(order)
+
+        if order.coupon_code:
+            
+            total = CouponService.apply_coupon(order.coupon_code, total)
+
+        return total
 
     @staticmethod
     def update_order(order_id, updates):
@@ -148,6 +162,8 @@ class OrderService:
             traffic_condition=payload.get("traffic_condition"),
             weather_condition=payload.get("weather_condition"),
             route_taken=payload.get("route_taken"),
+            oupon_code=payload.get("coupon_code"),
+            
         )
         saved_order = OrderRepository.save(order)
         del reorder_drafts[draft_id]
