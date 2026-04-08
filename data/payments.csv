@@ -1,1 +1,3 @@
 id,order_id,customer_id,amount,payment_method,status,transaction_id,created_at,updated_at
+1,0,IDDD,100.0,credit_card,completed,951739da-21b9-4bbc-adc0-de0edaf4278b,2026-03-26T20:15:24.620919,2026-03-26T20:15:24.620927
+2,1,string,1.0,credit_card,completed,7a49c05c-4f27-4b55-8190-d205c7eebe74,2026-03-27T21:33:31.730458,2026-03-27T21:33:31.730466

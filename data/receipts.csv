@@ -1,0 +1,3 @@
+id,payment_id,order_id,customer_id,receipt_number,amount,tax,total,payment_method,issued_at
+1,1,0,IDDD,REC-3824E3E374,100.0,10.0,110.0,credit_card,2026-03-26T20:15:24.622439
+2,2,1,string,REC-1C11DF6C7A,1.0,0.1,1.1,credit_card,2026-03-27T21:33:31.731322
