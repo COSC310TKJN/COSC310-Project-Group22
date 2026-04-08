@@ -14,6 +14,7 @@ export default function RestaurantDetail() {
   const [orderForm, setOrderForm] = useState({
     delivery_method: "bike",
     delivery_distance: 5,
+    coupon_code: "",
   });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -37,7 +38,7 @@ export default function RestaurantDetail() {
     setSubmitting(true);
     const orderId = `ORD-${Date.now()}`;
     try {
-      const res = await api.post("/orders", {
+      const body = {
         order_id: orderId,
         restaurant_id: Number(id),
         food_item: item.name,
@@ -46,7 +47,10 @@ export default function RestaurantDetail() {
         delivery_method: orderForm.delivery_method,
         delivery_distance: orderForm.delivery_distance,
         customer_id: String(user.id),
-      });
+      };
+      const trimmed = orderForm.coupon_code?.trim();
+      if (trimmed) body.coupon_code = trimmed;
+      const res = await api.post("/orders", body);
       navigate(`/orders/${res.order.order_id}`);
     } catch (err) {
       setError(err.message);
@@ -155,6 +159,16 @@ export default function RestaurantDetail() {
                       }
                       className="w-16 rounded-lg border border-zinc-300 px-2 py-1 text-xs"
                       title="Distance (km)"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Coupon (optional)"
+                      value={orderForm.coupon_code}
+                      onChange={(e) =>
+                        setOrderForm({ ...orderForm, coupon_code: e.target.value })
+                      }
+                      className="w-28 rounded-lg border border-zinc-300 px-2 py-1 text-xs"
+                      title="Discount code"
                     />
                     <button
                       onClick={() => handleOrder(item)}

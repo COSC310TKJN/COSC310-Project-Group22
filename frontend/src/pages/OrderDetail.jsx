@@ -3,6 +3,12 @@ import { useParams, useNavigate } from "react-router-dom";
 import { api } from "../api";
 import { useAuth } from "../context/AuthContext";
 
+/** Payments use numeric order_id (digits from order id, e.g. ORD-1712… → 1712…). */
+function paymentOrderKey(routeOrderId) {
+  const n = Number(String(routeOrderId).replace(/\D/g, ""));
+  return Number.isFinite(n) && n > 0 ? n : null;
+}
+
 const STATUS_COLORS = {
   created: "bg-blue-100 text-blue-700",
   paid: "bg-indigo-100 text-indigo-700",
@@ -42,11 +48,16 @@ export default function OrderDetail() {
 
   function loadOrder() {
     setLoading(true);
+    const payKey = paymentOrderKey(orderId);
     Promise.all([
       api.get(`/orders/${orderId}`),
       api.get(`/orders/${orderId}/total`).catch(() => null),
-      api.get(`/payments/order/${orderId}`).catch(() => null),
-      api.get(`/payments/order/${orderId}/receipt`).catch(() => null),
+      payKey
+        ? api.get(`/payments/order/${payKey}`).catch(() => null)
+        : Promise.resolve(null),
+      payKey
+        ? api.get(`/payments/order/${payKey}/receipt`).catch(() => null)
+        : Promise.resolve(null),
     ])
       .then(([ord, pri, pay, rec]) => {
         setOrder(ord);
@@ -64,9 +75,15 @@ export default function OrderDetail() {
     setError("");
     setPaying(true);
     try {
+      const payKey = paymentOrderKey(orderId);
+      if (!payKey) {
+        throw new Error(
+          "This order id cannot be used for payments. Use a numeric or ORD-{digits} id."
+        );
+      }
       const total = pricing?.total || order.order_value;
       await api.post("/payments/", {
-        order_id: Number(orderId.replace(/\D/g, "")) || Date.now(),
+        order_id: payKey,
         customer_id: String(user.id),
         amount: total,
         payment_method: payMethod,
@@ -94,7 +111,7 @@ export default function OrderDetail() {
     try {
       await api.post("/reviews/", {
         customer_id: String(user.id),
-        order_id: Number(orderId.replace(/\D/g, "")) || 0,
+        order_id: paymentOrderKey(orderId) || 0,
         restaurant_id: order.restaurant_id,
         rating: reviewForm.rating,
         comment: reviewForm.comment || null,
@@ -231,6 +248,17 @@ export default function OrderDetail() {
               <span className="text-zinc-500">Tax</span>
               <span className="tabular-nums">${Number(pricing.tax).toFixed(2)}</span>
             </div>
+            {Number(pricing.discount) > 0 && (
+              <div className="flex justify-between text-emerald-700">
+                <span>
+                  Coupon discount
+                  {pricing.coupon_code ? ` (${pricing.coupon_code})` : ""}
+                </span>
+                <span className="tabular-nums">
+                  −${Number(pricing.discount).toFixed(2)}
+                </span>
+              </div>
+            )}
             <div className="flex justify-between border-t border-zinc-100 pt-2 font-semibold">
               <span>Total</span>
               <span className="tabular-nums">${Number(pricing.total).toFixed(2)}</span>

@@ -108,5 +108,9 @@ class Order:
             "route_taken": self.route_taken,
             "source_order_id": self.source_order_id,
             "coupon_code": self.coupon_code,
-            "status": self.status
+            "status": (
+                self.status.value
+                if isinstance(self.status, OrderStatus)
+                else self.status
+            ),
         }

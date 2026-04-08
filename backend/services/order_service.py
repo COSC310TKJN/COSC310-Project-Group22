@@ -13,7 +13,6 @@ class OrderService:
     @staticmethod
     def create_order(order_data):
         order = Order(
-            order = Order(
             order_id=order_data.order_id,
             restaurant_id=order_data.restaurant_id,
             food_item=order_data.food_item,
@@ -27,7 +26,6 @@ class OrderService:
             weather_condition=order_data.weather_condition,
             route_taken=order_data.route_taken,
             coupon_code=getattr(order_data, "coupon_code", None),
-        )
         )
         return OrderRepository.save(order)
 
@@ -44,21 +42,22 @@ class OrderService:
         return OrderRepository.save(order)
 
     @staticmethod
-    @staticmethod
     def calculate_order_total(order_id):
-
         order = OrderRepository.find_by_id(order_id)
-
         if not order:
             raise ValueError("Order not found")
 
-        total = PricingService.calc_total(order)
-
-        if order.coupon_code:
-            
-            total = CouponService.apply_coupon(order.coupon_code, total)
-
-        return total
+        pricing = dict(PricingService.calc_total(order))
+        pre_coupon_total = pricing["total"]
+        code = (order.coupon_code or "").strip()
+        if code:
+            final_total = CouponService.apply_coupon(code, pre_coupon_total)
+            pricing["discount"] = round(pre_coupon_total - final_total, 2)
+            pricing["total"] = round(final_total, 2)
+            pricing["coupon_code"] = code
+        else:
+            pricing["discount"] = 0.0
+        return pricing
 
     @staticmethod
     def update_order(order_id, updates):
@@ -119,6 +118,7 @@ class OrderService:
                 "weather_condition": source_order.weather_condition,
                 "route_taken": source_order.route_taken,
                 "source_order_id": source_order.order_id,
+                "coupon_code": source_order.coupon_code,
             },
         }
         return draft_id, reorder_drafts[draft_id]["order_payload"]
@@ -162,8 +162,7 @@ class OrderService:
             traffic_condition=payload.get("traffic_condition"),
             weather_condition=payload.get("weather_condition"),
             route_taken=payload.get("route_taken"),
-            oupon_code=payload.get("coupon_code"),
-            
+            coupon_code=payload.get("coupon_code"),
         )
         saved_order = OrderRepository.save(order)
         del reorder_drafts[draft_id]

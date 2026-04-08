@@ -50,10 +50,13 @@ def cancel_order(order_id: str):
 
 @router.get("/orders/{order_id}/total")
 def get_order_total(order_id: str):
-    pricing = OrderService.calculate_order_total(order_id)
+    try:
+        pricing = OrderService.calculate_order_total(order_id)
+    except ValueError as error:
+        raise HTTPException(status_code=404, detail=str(error)) from error
     return {
         "order_id": order_id,
-        "pricing": pricing
+        "pricing": pricing,
     }
 
 

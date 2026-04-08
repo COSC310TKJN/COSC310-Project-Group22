@@ -25,16 +25,29 @@ export default function ManageOrders() {
       .finally(() => setLoading(false));
   }, []);
 
-  async function advanceStatus(orderId, currentStatus) {
-    const idx = STATUS_FLOW.indexOf(currentStatus);
-    if (idx < 0 || idx >= STATUS_FLOW.length - 1) return;
-    const nextStatus = STATUS_FLOW[idx + 1];
+  async function advanceStatus(orderId) {
     setUpdating(orderId);
     setError("");
     try {
-      await api.patchWithRole(`/orders/${orderId}/status`, {
-        new_status: nextStatus,
-      }, "admin");
+      const st = await api.get(`/orders/${orderId}/status`);
+      const cur = st.current_status;
+      const idx = STATUS_FLOW.indexOf(cur);
+      if (idx < 0 || idx >= STATUS_FLOW.length - 1) {
+        setError(`Cannot advance from status: ${cur}`);
+        return;
+      }
+      const nextStatus = STATUS_FLOW[idx + 1];
+      await api.patchWithRole(
+        `/orders/${orderId}/status`,
+        { new_status: nextStatus },
+        "admin"
+      );
+      const [paid, failed] = await Promise.all([
+        api.get("/payments/manager/orders"),
+        api.get("/payments/manager/failed-payments"),
+      ]);
+      setPaidOrders(paid);
+      setFailedPayments(failed);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -100,7 +113,7 @@ export default function ManageOrders() {
                   </p>
                 </div>
                 <button
-                  onClick={() => advanceStatus(o.order_id, "paid")}
+                  onClick={() => advanceStatus(o.order_id)}
                   disabled={updating === o.order_id}
                   className="rounded-lg bg-zinc-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-zinc-800 disabled:opacity-50"
                 >
