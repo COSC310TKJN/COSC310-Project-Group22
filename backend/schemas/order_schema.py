@@ -22,8 +22,10 @@ class OrderCreate(BaseModel):
     delivery_method: str
     delivery_distance: float
     customer_id: str
-    source_order_id: Optional[str] = None
 
+    coupon_code: Optional[str] = None
+
+    source_order_id: Optional[str] = None
     traffic_condition: Optional[str] = None
     weather_condition: Optional[str] = None
     route_taken: Optional[str] = None
