@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from typing import Optional
 from enum import Enum
 
@@ -52,4 +52,15 @@ class ReorderDraftRequest(BaseModel):
 class ReorderDraftUpdate(BaseModel):
     order_time: Optional[str] = None
     delivery_method: Optional[str] = None
-    delivery_distance: Optional[float] = None
+
+
+class OrderAdminUpdate(BaseModel):
+
+    model_config = ConfigDict(extra="forbid")
+
+    food_item: Optional[str] = None
+    order_value: Optional[float] = None
+    delivery_method: Optional[str] = None
+    restaurant_id: Optional[int] = None
+    order_time: Optional[str] = None
+    coupon_code: Optional[str] = None

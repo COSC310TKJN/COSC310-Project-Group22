@@ -4,7 +4,7 @@ const links = [
   {
     to: "/admin/orders",
     title: "Manage Orders",
-    desc: "View paid orders, failed payments, and update delivery status.",
+    desc: "Paid and failed payments, all orders list, delivery status, and manager-only order edits.",
   },
   {
     to: "/admin/restaurants",

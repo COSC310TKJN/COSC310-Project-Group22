@@ -64,7 +64,7 @@ export default function OrderHistory() {
             >
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="font-medium">{o.food_item}</span>
+                  <span className="max-w-[60%] break-words font-medium">{o.food_item}</span>
                   <span
                     className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase ${
                       STATUS_COLORS[o.status] || "bg-zinc-100 text-zinc-600"

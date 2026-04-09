@@ -51,7 +51,10 @@ export default function OrderDetail() {
     const payKey = paymentOrderKey(orderId);
     Promise.all([
       api.get(`/orders/${orderId}`),
-      api.get(`/orders/${orderId}/total`).catch(() => null),
+      api.get(`/orders/${orderId}/total`).catch((err) => {
+        console.warn("Order total failed:", err.message);
+        return null;
+      }),
       payKey
         ? api.get(`/payments/order/${payKey}`).catch(() => null)
         : Promise.resolve(null),
@@ -200,7 +203,7 @@ export default function OrderDetail() {
         <div className="grid gap-3 sm:grid-cols-2">
           <div>
             <span className="text-xs text-zinc-400">Item</span>
-            <p className="font-medium">{order.food_item}</p>
+            <p className="break-words font-medium">{order.food_item}</p>
           </div>
           <div>
             <span className="text-xs text-zinc-400">Value</span>
@@ -236,6 +239,27 @@ export default function OrderDetail() {
             Pricing
           </h2>
           <div className="space-y-2 text-sm">
+            {pricing.coupon_applied && (
+              <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-800">
+                Coupon <strong>{pricing.coupon_code}</strong> applied — you save{" "}
+                <strong className="tabular-nums">
+                  ${Number(pricing.discount).toFixed(2)}
+                </strong>
+                .
+              </div>
+            )}
+            {pricing.coupon_error && (
+              <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+                <span className="font-medium">Coupon not applied</span>
+                {order.coupon_code && (
+                  <span>
+                    {" "}
+                    (<strong>{order.coupon_code}</strong>)
+                  </span>
+                )}
+                : {pricing.coupon_error} You pay the full total below.
+              </div>
+            )}
             <div className="flex justify-between">
               <span className="text-zinc-500">Subtotal</span>
               <span className="tabular-nums">${Number(pricing.subtotal).toFixed(2)}</span>

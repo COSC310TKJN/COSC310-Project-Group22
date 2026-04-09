@@ -1,5 +1,8 @@
-from fastapi import APIRouter, HTTPException
-from backend.schemas.order_schema import OrderCreate, ReorderDraftRequest
+from fastapi import APIRouter, Depends, HTTPException
+
+from backend.app.routes.auth_routes import require_manager
+from backend.models.user import User
+from backend.schemas.order_schema import OrderAdminUpdate, OrderCreate, ReorderDraftRequest
 from backend.services.order_service import OrderService
 
 router = APIRouter()
@@ -17,6 +20,26 @@ def create_order(order: OrderCreate):
         "message": "Order created",
         "order": new_order.to_dict()
     }
+
+
+@router.get("/orders/admin")
+def admin_list_orders(_current: User = Depends(require_manager)):
+    orders = OrderService.list_all_orders()
+    return {"orders": [o.to_dict() for o in orders]}
+
+
+@router.patch("/orders/admin/{order_id}")
+def admin_update_order(
+    order_id: str,
+    body: OrderAdminUpdate,
+    _current: User = Depends(require_manager),
+):
+    updates = body.model_dump(exclude_unset=True)
+    try:
+        order = OrderService.admin_update_order(order_id, updates)
+    except ValueError as error:
+        raise HTTPException(status_code=400, detail=str(error)) from error
+    return {"message": "Order updated", "order": order.to_dict()}
 
 
 @router.get("/orders/{order_id}")
