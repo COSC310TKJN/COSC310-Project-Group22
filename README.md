@@ -6,6 +6,6 @@ in project root directory build with:
 Frontend located at:
 5173:5173
 
-Backend lacated at:
+Backend located at:
 8000:8000
 http://localhost:8000/docs 
