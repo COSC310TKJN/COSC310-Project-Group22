@@ -85,6 +85,36 @@ export const api = {
     createMenuItem: (payload) => request("/menu-items", { method: "POST", body: payload }),
   },
 
+  deliverySlots: {
+    availability: (restaurantId, { date } = {}) =>
+      request(
+        `/restaurants/${restaurantId}/delivery-slots/availability${
+          date ? `?date=${encodeURIComponent(date)}` : ""
+        }`
+      ),
+    select: (orderId, slotStart) =>
+      request(`/orders/${orderId}/delivery-slot`, {
+        method: "POST",
+        body: { slot_start: slotStart },
+      }),
+    updateConfig: (restaurantId, payload) =>
+      request(`/admin/restaurants/${restaurantId}/delivery-slot-config`, {
+        method: "PUT",
+        body: payload,
+      }),
+    createBlackout: (restaurantId, payload) =>
+      request(`/admin/restaurants/${restaurantId}/delivery-blackouts`, {
+        method: "POST",
+        body: payload,
+      }),
+    listBlackouts: (restaurantId, { date } = {}) =>
+      request(
+        `/admin/restaurants/${restaurantId}/delivery-blackouts${
+          date ? `?date=${encodeURIComponent(date)}` : ""
+        }`
+      ),
+  },
+
   orders: {
     create: (payload) => request("/orders", { method: "POST", body: payload }),
     get: (orderId) => request(`/orders/${orderId}`),
