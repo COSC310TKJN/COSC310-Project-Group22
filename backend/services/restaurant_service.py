@@ -10,6 +10,7 @@ from backend.schemas.restaurant_schema import (
     RestaurantDetailResponse,
     RestaurantResponse,
 )
+from backend.app.menu_storage import load_menu_items_for_restaurant, MenuItemRecord
 from backend.services.pricing_service import PricingService
 from backend.services import virtual_menu
 from backend.services import description_service
@@ -45,23 +46,29 @@ def browse_restaurants(
     )
 
 
+def _all_menu_items(restaurant_id: int):
+    virtual_items = virtual_menu.virtual_menu_for_restaurant(restaurant_id)
+    csv_items = load_menu_items_for_restaurant(restaurant_id)
+    combined = []
+    for item in virtual_items:
+        estimated = PricingService.calculate_estimated_price(item.base_price)
+        combined.append(_to_menu_item_response(item, estimated))
+    for item in csv_items:
+        combined.append(_to_menu_item_response(item, item.estimated_price))
+    return combined
+
+
 def get_restaurant_detail(restaurant_id: int):
     restaurant = restaurant_repo.get_restaurant_by_id(restaurant_id)
     if not restaurant:
         raise HTTPException(status_code=404, detail="Restaurant not found")
-
-    menu_items = virtual_menu.virtual_menu_for_restaurant(restaurant_id)
-    menu_responses = []
-    for item in menu_items:
-        estimated = PricingService.calculate_estimated_price(item.base_price)
-        menu_responses.append(_to_menu_item_response(item, estimated))
 
     return RestaurantDetailResponse(
         id=restaurant.id,
         name=restaurant.name,
         cuisine_type=restaurant.cuisine_type,
         address=restaurant.address,
-        menu_items=menu_responses,
+        menu_items=_all_menu_items(restaurant_id),
     )
 
 def get_restaurant_menu(
@@ -71,14 +78,7 @@ def get_restaurant_menu(
     if not restaurant:
         raise HTTPException(status_code=404, detail="Restaurant not found")
 
-    items = virtual_menu.virtual_menu_for_restaurant(restaurant_id)
-    return [
-        _to_menu_item_response(
-            item,
-            PricingService.calculate_estimated_price(item.base_price),
-        )
-        for item in items
-    ]
+    return _all_menu_items(restaurant_id)
 
 
 def search_restaurants(

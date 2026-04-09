@@ -25,6 +25,7 @@ export default function RestaurantDetail() {
   const navigate = useNavigate();
   const [restaurant, setRestaurant] = useState(null);
   const [reviews, setReviews] = useState(null);
+  const [reviewList, setReviewList] = useState([]);
   const [loading, setLoading] = useState(true);
   /** cart[cartKey] = { cartKey, menuId, name, estimated_price, qty } */
   const [cart, setCart] = useState({});
@@ -55,10 +56,12 @@ export default function RestaurantDetail() {
     Promise.all([
       api.get(`/restaurants/${id}`),
       api.get(`/reviews/restaurant/${id}/average`).catch(() => null),
+      api.get(`/reviews/restaurant/${id}`).catch(() => []),
     ])
-      .then(([rest, rev]) => {
+      .then(([rest, rev, revList]) => {
         setRestaurant(rest);
         setReviews(rev);
+        setReviewList(revList);
       })
       .catch(() => {})
       .finally(() => setLoading(false));
@@ -354,6 +357,62 @@ export default function RestaurantDetail() {
             )}
           </div>
         </aside>
+      </div>
+
+      {/* Reviews */}
+      <div className="mt-12">
+        <h2 className="mb-4 text-lg font-semibold">
+          Reviews
+          {reviews && reviews.total_reviews > 0 && (
+            <span className="ml-2 text-sm font-normal text-zinc-400">
+              {reviews.average_rating.toFixed(1)} avg &middot; {reviews.total_reviews} review
+              {reviews.total_reviews !== 1 && "s"}
+            </span>
+          )}
+        </h2>
+
+        {reviewList.length === 0 ? (
+          <p className="py-8 text-center text-sm text-zinc-400">
+            No reviews yet. Order and be the first to leave one.
+          </p>
+        ) : (
+          <div className="space-y-3">
+            {reviewList.map((r) => (
+              <div
+                key={r.id}
+                className="rounded-xl border border-zinc-200 bg-white p-4"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="flex gap-0.5">
+                      {[1, 2, 3, 4, 5].map((n) => (
+                        <span
+                          key={n}
+                          className={`text-sm ${
+                            n <= r.rating ? "text-emerald-500" : "text-zinc-200"
+                          }`}
+                        >
+                          ★
+                        </span>
+                      ))}
+                    </div>
+                    <span className="text-xs text-zinc-400">
+                      by customer #{r.customer_id}
+                    </span>
+                  </div>
+                  {r.created_at && (
+                    <span className="text-xs text-zinc-400">
+                      {new Date(r.created_at).toLocaleDateString()}
+                    </span>
+                  )}
+                </div>
+                {r.comment && (
+                  <p className="mt-2 text-sm text-zinc-600">{r.comment}</p>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

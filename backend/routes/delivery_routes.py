@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Header
 
-from backend.app.delivery_storage import load_status_history
+from backend.app.delivery_storage import load_status_history, find_order_by_id
 from backend.models.order import OrderStatus
+from backend.services import notification_service
 from backend.schemas.delivery_schema import (
     DeliveryStatusUpdateRequest,
     DeliveryStatusUpdateResponse,
@@ -47,6 +48,17 @@ def update_delivery_status(
         history[-2].status if len(history) >= 2 else OrderStatus.CREATED.value
     )
     cur = order.status.value if isinstance(order.status, OrderStatus) else str(order.status)
+    try:
+        delivery_order = find_order_by_id(order_id)
+        if delivery_order:
+            cid = str(delivery_order.customer_id)
+            if cur == OrderStatus.DELIVERED.value:
+                notification_service.notify_delivery(cid, order_id)
+            else:
+                notification_service.notify_status_change(cid, order_id, cur)
+    except Exception:
+        pass
+
     return DeliveryStatusUpdateResponse(
         order_id=order_id,
         previous_status=previous_status,
