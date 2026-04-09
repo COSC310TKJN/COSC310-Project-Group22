@@ -1,4 +1,11 @@
 # COSC310-Project
-build with:
+in project root directory build with:
 - docker compose build --no-cache
 - docker compose up
+
+Frontend located at:
+5173:5173
+
+Backend lacated at:
+8000:8000
+http://localhost:8000/docs 
