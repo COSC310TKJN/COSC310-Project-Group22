@@ -54,7 +54,7 @@ def test_create_reorder_draft_not_found():
     assert response.json()["detail"] == "Order not found"
 
 
-def test_create_reorder_draft_requires_delivered_order():
+def test_create_reorder_draft_allows_created_order():
     client.post(
         "/orders",
         json={
@@ -69,8 +69,17 @@ def test_create_reorder_draft_requires_delivered_order():
         },
     )
     response = client.post("/orders/101/reorder", json={"customer_id": "C101"})
+    assert response.status_code == 200
+    assert response.json()["message"] == "Reorder draft created"
+
+
+def test_create_reorder_draft_rejects_cancelled_order():
+    create_delivered_order("108", customer_id="C108")
+    orders_db["108"].status = OrderStatus.CANCELLED
+
+    response = client.post("/orders/108/reorder", json={"customer_id": "C108"})
     assert response.status_code == 400
-    assert response.json()["detail"] == "Only delivered orders can be reordered"
+    assert response.json()["detail"] == "Cancelled orders cannot be reordered"
 
 
 def test_create_reorder_draft_rejects_customer_mismatch():

@@ -159,7 +159,7 @@ export default function OrderDetail() {
   const canPay = order.status === "created" && !payment;
   const canCancel = ["created", "paid"].includes(order.status);
   const canReview = order.status === "delivered" && !reviewSubmitted;
-  const canReorder = order.status === "delivered";
+  const canReorder = order.status !== "cancelled";
 
   return (
     <div>
