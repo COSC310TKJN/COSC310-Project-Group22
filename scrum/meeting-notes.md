@@ -1,137 +1,14 @@
-# Meeting Notes – M2 Architecture & Design
+# Meeting Notes Index
 
-Date: February 10, 2026
+as of 04-08-26 meeting notes are now split into individual files under `scrum/meetings`.
 
-## Attendees
-- Tyler
-- Jason
-- Karan
-- Nasser
-
-## Agenda
-- Review M2 assignment requirements
-- Divide responsibilities
-- Confirm GitHub workflow requirements
-
-## Decisions
-- Tyler: High-Level Architecture
-- Jason: Component Identification + Scrum Documentation
-- Karan: Data Flow Diagram + Class Diagram
-- Nasser: Sequence Diagrams + Traceability Matrix Update
-
-## Action Items
-- Each team member must:
-    - Assign themselves to relevant issues
-    - Add estimated time to each issue
-    - Include a Definition of Done
-    - Update issue progress
-- Use GitHub Project Board for tracking
-- Use Pull Requests for merging work into main
-
-## Next Meeting
-- Review completed architecture document
-- Finalize diagrams and formatting
-
-
-
-
-# Meeting Notes – M3 Role Allocation / Expectations
-
-Date: March 3rd, 2026
-Time: 2pm (online)
-
-## Attendees
-- Tyler
-- Jason
-- Karan
-- Nasser
-
-## Agenda
-- Review M3 assignment requirements
-- Divide responsibilities into various featues
-
-## Decisions
-- Tyler: Feature 4,5
-- Jason: Feature 1,2
-- Karan: Feature 3,6
-- Nasser: Feature 7,8
-
-## Action Items
-- Each team member must:
-    - Assign themselves on the Project Backlog Board with each Feature assigned
-    - Add estimated time to complete each Fuctional Requirement
-    - To get half of one feature done prior to our lab session (March 6th, 2026)
-    - Update issue progress
-- Use GitHub Project Board for tracking
-- Use Pull Requests for merging work into main (ensure meaningful comments are made)
-
-## Next Meeting
-- Review progress on features assigned
-- Ensure everyone has completed their part
-- Assist those who may be behind in implimenting certain features
-
-
-# Meeting Notes – M3 update
-
-Date: March 12, 2026
-
-## Attendees
-- Tyler
-- Jason
-- Karan
-- Nasser
-
-## Agenda
-- Review M3 assignment requirements
-- Progress updates
-- Confirm next steps
-
-## Decisions
-- Complete backend features by EOD sunday with testing
-- merge to main by EOD monday
-
-## Action Items
-- Each team member must:
-    - Complete their assigned features 
-    - Add estimated time to each issue
-    - Ensure completed feature aligns with Definition of Done
-    - Update issue progress
-- Use GitHub Project Board for tracking
-- Use Pull Requests for merging work into main
-
-## Next Meeting
-- Work on merging features into the backed
-
-
-# Meeting Notes – M3 Rubric Complience Reminder
-
-Date: March 19, 2026
-
-## Attendees
-- Tyler
-- Jason
-- Karan
-- Nasser
-
-## Agenda
-- Review M3 rubric requirements
-- Progress updates
-- Review SWE best practices
-
-## Decisions
-- Created the folder in GitHub containing screenshots and coverage reports
-- Team must ensure they employ different testing methodologies, such as mocking, equivalence partitioning, fault injection, and exception handling
-
-## Action Items
-- Each team member must:
-    - submit screenshots to the folder in GitHub containing screenshots and coverage reports of the testing
-    - continue making PR's
-    - ensure the diversity and coverage of testing
-
-## Next Meeting
-- Work on merging features into the backed
-
-
-
-
-
+## Meetings
+- `scrum/meetings/2026-02-10-m2-architecture-design.md`
+- `scrum/meetings/2026-02-17-m2-progress-check.md`
+- `scrum/meetings/2026-02-24-m2-final-review.md`
+- `scrum/meetings/2026-03-03-m3-role-allocation.md`
+- `scrum/meetings/2026-03-12-m3-progress-update.md`
+- `scrum/meetings/2026-03-19-m3-rubric-compliance.md`
+- `scrum/meetings/2026-03-26-m3-stabilization-and-tests.md`
+- `scrum/meetings/2026-04-02-frontend-planning.md`
+- `scrum/meetings/2026-04-08-frontend-integration-review.md`
