@@ -3,6 +3,12 @@ import { useParams, useNavigate } from "react-router-dom";
 import { api } from "../api";
 import { useAuth } from "../context/AuthContext";
 
+/** Payments use numeric order_id (digits from order id, e.g. ORD-1712… → 1712…). */
+function paymentOrderKey(routeOrderId) {
+  const n = Number(String(routeOrderId).replace(/\D/g, ""));
+  return Number.isFinite(n) && n > 0 ? n : null;
+}
+
 const STATUS_COLORS = {
   created: "bg-blue-100 text-blue-700",
   paid: "bg-indigo-100 text-indigo-700",
@@ -42,11 +48,19 @@ export default function OrderDetail() {
 
   function loadOrder() {
     setLoading(true);
+    const payKey = paymentOrderKey(orderId);
     Promise.all([
       api.get(`/orders/${orderId}`),
-      api.get(`/orders/${orderId}/total`).catch(() => null),
-      api.get(`/payments/order/${orderId}`).catch(() => null),
-      api.get(`/payments/order/${orderId}/receipt`).catch(() => null),
+      api.get(`/orders/${orderId}/total`).catch((err) => {
+        console.warn("Order total failed:", err.message);
+        return null;
+      }),
+      payKey
+        ? api.get(`/payments/order/${payKey}`).catch(() => null)
+        : Promise.resolve(null),
+      payKey
+        ? api.get(`/payments/order/${payKey}/receipt`).catch(() => null)
+        : Promise.resolve(null),
     ])
       .then(([ord, pri, pay, rec]) => {
         setOrder(ord);
@@ -64,9 +78,15 @@ export default function OrderDetail() {
     setError("");
     setPaying(true);
     try {
+      const payKey = paymentOrderKey(orderId);
+      if (!payKey) {
+        throw new Error(
+          "This order id cannot be used for payments. Use a numeric or ORD-{digits} id."
+        );
+      }
       const total = pricing?.total || order.order_value;
       await api.post("/payments/", {
-        order_id: Number(orderId.replace(/\D/g, "")) || Date.now(),
+        order_id: payKey,
         customer_id: String(user.id),
         amount: total,
         payment_method: payMethod,
@@ -94,7 +114,7 @@ export default function OrderDetail() {
     try {
       await api.post("/reviews/", {
         customer_id: String(user.id),
-        order_id: Number(orderId.replace(/\D/g, "")) || 0,
+        order_id: paymentOrderKey(orderId) || 0,
         restaurant_id: order.restaurant_id,
         rating: reviewForm.rating,
         comment: reviewForm.comment || null,
@@ -183,7 +203,7 @@ export default function OrderDetail() {
         <div className="grid gap-3 sm:grid-cols-2">
           <div>
             <span className="text-xs text-zinc-400">Item</span>
-            <p className="font-medium">{order.food_item}</p>
+            <p className="break-words font-medium">{order.food_item}</p>
           </div>
           <div>
             <span className="text-xs text-zinc-400">Value</span>
@@ -219,6 +239,27 @@ export default function OrderDetail() {
             Pricing
           </h2>
           <div className="space-y-2 text-sm">
+            {pricing.coupon_applied && (
+              <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-800">
+                Coupon <strong>{pricing.coupon_code}</strong> applied — you save{" "}
+                <strong className="tabular-nums">
+                  ${Number(pricing.discount).toFixed(2)}
+                </strong>
+                .
+              </div>
+            )}
+            {pricing.coupon_error && (
+              <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+                <span className="font-medium">Coupon not applied</span>
+                {order.coupon_code && (
+                  <span>
+                    {" "}
+                    (<strong>{order.coupon_code}</strong>)
+                  </span>
+                )}
+                : {pricing.coupon_error} You pay the full total below.
+              </div>
+            )}
             <div className="flex justify-between">
               <span className="text-zinc-500">Subtotal</span>
               <span className="tabular-nums">${Number(pricing.subtotal).toFixed(2)}</span>
@@ -231,6 +272,17 @@ export default function OrderDetail() {
               <span className="text-zinc-500">Tax</span>
               <span className="tabular-nums">${Number(pricing.tax).toFixed(2)}</span>
             </div>
+            {Number(pricing.discount) > 0 && (
+              <div className="flex justify-between text-emerald-700">
+                <span>
+                  Coupon discount
+                  {pricing.coupon_code ? ` (${pricing.coupon_code})` : ""}
+                </span>
+                <span className="tabular-nums">
+                  −${Number(pricing.discount).toFixed(2)}
+                </span>
+              </div>
+            )}
             <div className="flex justify-between border-t border-zinc-100 pt-2 font-semibold">
               <span>Total</span>
               <span className="tabular-nums">${Number(pricing.total).toFixed(2)}</span>

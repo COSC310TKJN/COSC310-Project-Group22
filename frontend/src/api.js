@@ -12,6 +12,15 @@ function headers(extra = {}) {
   return h;
 }
 
+function formatApiError(err) {
+  const d = err?.detail;
+  if (typeof d === "string") return d;
+  if (Array.isArray(d))
+    return d.map((e) => e?.msg || JSON.stringify(e)).join("; ") || "Request failed";
+  if (d && typeof d === "object") return JSON.stringify(d);
+  return err?.message || "Request failed";
+}
+
 async function request(path, opts = {}) {
   const res = await fetch(`${BASE}${path}`, {
     headers: headers(opts.headers),
@@ -20,7 +29,7 @@ async function request(path, opts = {}) {
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({ detail: res.statusText }));
-    throw new Error(err.detail || "Request failed");
+    throw new Error(formatApiError(err));
   }
   return res.json();
 }

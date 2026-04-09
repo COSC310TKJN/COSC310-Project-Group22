@@ -10,6 +10,7 @@ import OrderDetail from "./pages/OrderDetail";
 import Notifications from "./pages/Notifications";
 import Dashboard from "./pages/admin/Dashboard";
 import ManageOrders from "./pages/admin/ManageOrders";
+import AdminOrderEdit from "./pages/admin/AdminOrderEdit";
 import ManageRestaurants from "./pages/admin/ManageRestaurants";
 import DeliverySlots from "./pages/admin/DeliverySlots";
 
@@ -110,6 +111,14 @@ export default function App() {
           element={
             <RequireManager>
               <ManageOrders />
+            </RequireManager>
+          }
+        />
+        <Route
+          path="/admin/order/:orderId"
+          element={
+            <RequireManager>
+              <AdminOrderEdit />
             </RequireManager>
           }
         />

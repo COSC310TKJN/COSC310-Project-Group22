@@ -33,17 +33,21 @@ def load_coupons():
         reader = csv.DictReader(f)
 
         for row in reader:
-
+            code_key = (row.get("code") or "").strip().upper()
+            if not code_key:
+                continue
+            exp = (row.get("expiry_date") or "").strip() or None
             coupon = Coupon(
-                code=row["code"],
-                discount_type=row["discount_type"],
+                code=code_key,
+                discount_type=(row.get("discount_type") or "percent").strip().lower(),
                 discount_value=float(row["discount_value"]),
-                expiry_date=row["expiry_date"],
-                min_order_value=float(row["min_order_value"]),
-                one_time_use=row["one_time_use"] == "True"
+                expiry_date=exp,
+                min_order_value=float(row.get("min_order_value") or 0),
+                one_time_use=str(row.get("one_time_use", "")).strip().lower()
+                in ("true", "1", "yes"),
             )
 
-            coupons[coupon.code] = coupon
+            coupons[code_key] = coupon
 
     return coupons
 
@@ -55,5 +59,6 @@ class CouponRepository:
 
     @staticmethod
     def find_by_code(code: str):
-
-        return coupons_db.get(code)
+        if not code or not str(code).strip():
+            return None
+        return coupons_db.get(str(code).strip().upper())

@@ -1,1 +1,2 @@
 order_id,restaurant_id,food_item,order_time,order_value,delivery_method,delivery_distance,customer_id,traffic_condition,weather_condition,route_taken,status
+1,1,burger,2026-03-27T21:26:50.238276+00:00,10.99,bike,0.0,test-user1,,,,paid

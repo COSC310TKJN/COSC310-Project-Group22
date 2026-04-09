@@ -116,7 +116,20 @@ def test_update_reorder_draft_rejects_disallowed_fields():
         json={"food_item": "Sushi"},
     )
     assert response.status_code == 400
-    assert "Only order_time, delivery_method, and delivery_distance" in response.json()["detail"]
+    assert "Only order_time and delivery_method can be edited" in response.json()["detail"]
+
+
+def test_update_reorder_draft_rejects_delivery_distance_change():
+    create_delivered_order("107", customer_id="C107")
+    draft = client.post("/orders/107/reorder", json={"customer_id": "C107"})
+    draft_id = draft.json()["reorder_draft_id"]
+
+    response = client.patch(
+        f"/orders/reorder/{draft_id}",
+        json={"delivery_distance": 99},
+    )
+    assert response.status_code == 400
+    assert "Only order_time and delivery_method" in response.json()["detail"]
 
 
 def test_confirm_reorder_success_creates_new_order():
