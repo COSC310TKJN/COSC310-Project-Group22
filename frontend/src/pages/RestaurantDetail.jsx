@@ -54,7 +54,7 @@ export default function RestaurantDetail() {
     setLoading(true);
     setCart({});
     Promise.all([
-      api.get(`/restaurants/${id}`),
+      api.restaurants.detail(id),
       api.get(`/reviews/restaurant/${id}/average`).catch(() => null),
       api.get(`/reviews/restaurant/${id}`).catch(() => []),
     ])
@@ -128,7 +128,7 @@ export default function RestaurantDetail() {
       };
       const trimmed = orderForm.coupon_code?.trim();
       if (trimmed) body.coupon_code = trimmed;
-      const res = await api.post("/orders", body);
+      const res = await api.orders.create(body);
       setCart({});
       navigate(`/orders/${res.order.order_id}`);
     } catch (err) {

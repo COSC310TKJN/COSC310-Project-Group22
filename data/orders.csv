@@ -1,2 +1,6 @@
-order_id,restaurant_id,food_item,order_time,order_value,delivery_method,delivery_distance,customer_id,traffic_condition,weather_condition,route_taken,status
-1,1,burger,2026-03-27T21:26:50.238276+00:00,10.99,bike,0.0,test-user1,,,,paid
+order_id,restaurant_id,food_item,order_time,order_value,delivery_method,delivery_distance,customer_id,source_order_id,traffic_condition,weather_condition,route_taken,coupon_code,status
+1,1,burger,2026-03-27T21:26:50.238276+00:00,10.99,bike,0.0,test-user1,,,,,,paid
+ORD-1775700653778,1,1× Taccos,2026-04-09T02:10:53.778Z,13.33,bike,5.0,19,,,,,,created
+ORD-1775700863435,2,1× Sushi,2026-04-09T02:14:23.435Z,14.67,car,5.0,19,,,,,,created
+ORD-1775701024899,2,1× Sushi,2026-04-09T02:14:23.435Z,14.67,car,5.0,19,ORD-1775700863435,,,,,created
+ORD-1775701098612,1,1× Taccos,2026-04-09T02:10:53.778Z,13.33,bike,5.0,19,ORD-1775700653778,,,,,created

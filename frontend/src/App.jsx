@@ -1,4 +1,5 @@
 import { Routes, Route, Navigate } from "react-router-dom";
+import { useEffect, useState } from "react";
 import { useAuth } from "./context/AuthContext";
 import Layout from "./components/Layout";
 import Login from "./pages/Login";
@@ -13,17 +14,100 @@ import ManageOrders from "./pages/admin/ManageOrders";
 import AdminOrderEdit from "./pages/admin/AdminOrderEdit";
 import ManageRestaurants from "./pages/admin/ManageRestaurants";
 import DeliverySlots from "./pages/admin/DeliverySlots";
+import ReorderConfirm from "./pages/ReorderConfirm";
 
 function RequireAuth({ children }) {
-  const { user } = useAuth();
+  const { user, clearAuth, verifyUserPortal } = useAuth();
+  const [checking, setChecking] = useState(true);
+  const [allowed, setAllowed] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+    if (!user) {
+      setChecking(false);
+      setAllowed(false);
+      return () => {
+        mounted = false;
+      };
+    }
+
+    verifyUserPortal()
+      .then(() => {
+        if (!mounted) return;
+        setAllowed(true);
+      })
+      .catch(() => {
+        if (!mounted) return;
+        clearAuth();
+        setAllowed(false);
+      })
+      .finally(() => {
+        if (!mounted) return;
+        setChecking(false);
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, [user, clearAuth, verifyUserPortal]);
+
   if (!user) return <Navigate to="/login" replace />;
+  if (checking) return <div className="text-sm text-zinc-500">Checking session...</div>;
+  if (!allowed) {
+    return <Navigate to="/login" replace state={{ message: "Your session expired. Please sign in again." }} />;
+  }
   return children;
 }
 
 function RequireManager({ children }) {
-  const { user } = useAuth();
+  const { user, clearAuth, verifyManagerPortal } = useAuth();
+  const [checking, setChecking] = useState(true);
+  const [allowed, setAllowed] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+    if (!user) {
+      setChecking(false);
+      setAllowed(false);
+      return () => {
+        mounted = false;
+      };
+    }
+
+    verifyManagerPortal()
+      .then(() => {
+        if (!mounted) return;
+        setAllowed(true);
+      })
+      .catch((error) => {
+        if (!mounted) return;
+        const message = String(error?.message || "").toLowerCase();
+        if (message.includes("login") || message.includes("authentication")) {
+          clearAuth();
+        }
+        setAllowed(false);
+      })
+      .finally(() => {
+        if (!mounted) return;
+        setChecking(false);
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, [user, clearAuth, verifyManagerPortal]);
+
   if (!user) return <Navigate to="/login" replace />;
-  if (!user.is_manager) return <Navigate to="/" replace />;
+  if (checking) return <div className="text-sm text-zinc-500">Checking manager access...</div>;
+  if (!allowed) {
+    return (
+      <Navigate
+        to="/"
+        replace
+        state={{ message: "Manager access required. Sign in with a manager account to continue." }}
+      />
+    );
+  }
   return children;
 }
 
@@ -85,6 +169,14 @@ export default function App() {
           element={
             <RequireAuth>
               <OrderDetail />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/orders/reorder/:draftId"
+          element={
+            <RequireAuth>
+              <ReorderConfirm />
             </RequireAuth>
           }
         />

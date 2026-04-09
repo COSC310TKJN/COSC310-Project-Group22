@@ -1,1 +1,6 @@
 id,user_id,notification_type,enabled,channel
+1,19,order_placed,True,in_app
+2,19,status_change,True,in_app
+3,19,order_cancelled,True,in_app
+4,19,delivery,True,in_app
+5,19,manager_new_order,True,in_app

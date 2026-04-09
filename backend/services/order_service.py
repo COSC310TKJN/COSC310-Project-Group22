@@ -165,8 +165,8 @@ class OrderService:
             if isinstance(source_order.status, OrderStatus)
             else str(source_order.status)
         )
-        if source_status != OrderStatus.DELIVERED.value:
-            raise ValueError("Only delivered orders can be reordered")
+        if source_status == OrderStatus.CANCELLED.value:
+            raise ValueError("Cancelled orders cannot be reordered")
 
         draft_id = uuid.uuid4().hex
         fixed_km = float(settings.FIXED_DELIVERY_DISTANCE_KM)

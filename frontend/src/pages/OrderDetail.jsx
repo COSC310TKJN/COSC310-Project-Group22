@@ -50,8 +50,8 @@ export default function OrderDetail() {
     setLoading(true);
     const payKey = paymentOrderKey(orderId);
     Promise.all([
-      api.get(`/orders/${orderId}`),
-      api.get(`/orders/${orderId}/total`).catch((err) => {
+      api.orders.get(orderId),
+      api.orders.total(orderId).catch((err) => {
         console.warn("Order total failed:", err.message);
         return null;
       }),
@@ -102,7 +102,7 @@ export default function OrderDetail() {
   async function handleCancel() {
     setError("");
     try {
-      await api.post(`/orders/${orderId}/cancel`);
+      await api.orders.cancel(orderId);
       loadOrder();
     } catch (err) {
       setError(err.message);
@@ -132,13 +132,10 @@ export default function OrderDetail() {
     setReordering(true);
     setError("");
     try {
-      const res = await api.post(`/orders/${orderId}/reorder`, {
-        customer_id: String(user.id),
+      const res = await api.orders.createReorderDraft(orderId, String(user.id));
+      navigate(`/orders/reorder/${res.reorder_draft_id}`, {
+        state: { draftOrder: res.order, sourceOrderId: orderId },
       });
-      const confirmRes = await api.post(
-        `/orders/reorder/${res.reorder_draft_id}/confirm`
-      );
-      navigate(`/orders/${confirmRes.order.order_id}`);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -162,7 +159,7 @@ export default function OrderDetail() {
   const canPay = order.status === "created" && !payment;
   const canCancel = ["created", "paid"].includes(order.status);
   const canReview = order.status === "delivered" && !reviewSubmitted;
-  const canReorder = order.status === "delivered";
+  const canReorder = order.status !== "cancelled";
 
   return (
     <div>
@@ -372,7 +369,7 @@ export default function OrderDetail() {
             disabled={reordering}
             className="rounded-lg border border-zinc-200 px-4 py-2 text-sm font-medium text-zinc-600 hover:bg-zinc-50 disabled:opacity-50"
           >
-            {reordering ? "Reordering..." : "Reorder"}
+            {reordering ? "Starting..." : "Reorder"}
           </button>
         )}
 
