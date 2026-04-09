@@ -43,20 +43,8 @@ export default function ManageOrders() {
     setUpdating(orderId);
     setError("");
     try {
-      const st = await api.get(`/orders/${orderId}/status`);
-      const cur = st.current_status;
-      const idx = STATUS_FLOW.indexOf(cur);
-      if (idx < 0 || idx >= STATUS_FLOW.length - 1) {
-        setError(`Cannot advance from status: ${cur}`);
-        return;
-      }
-      const nextStatus = STATUS_FLOW[idx + 1];
-      await api.patchWithRole(
-        `/orders/${orderId}/status`,
-        { new_status: nextStatus },
-        "admin"
-      );
-      await loadPayments();
+      await api.patch(`/orders/${orderId}/advance`);
+      await Promise.all([loadPayments(), loadAllOrders()]);
     } catch (err) {
       setError(err.message);
     } finally {

@@ -150,13 +150,8 @@ class OrderService:
 
     @staticmethod
     def next_order_id():
-        max_numeric_id = 0
-        for order in OrderRepository.find_all():
-            try:
-                max_numeric_id = max(max_numeric_id, int(order.order_id))
-            except ValueError:
-                continue
-        return str(max_numeric_id + 1)
+        import time
+        return f"ORD-{int(time.time() * 1000)}"
 
     @staticmethod
     def create_reorder_draft(source_order_id, customer_id):

@@ -3,7 +3,18 @@ from fastapi import APIRouter, Depends, HTTPException
 from backend.app.routes.auth_routes import require_manager
 from backend.models.user import User
 from backend.schemas.order_schema import OrderAdminUpdate, OrderCreate, ReorderDraftRequest
+from backend.app.user_storage import load_users
 from backend.services.order_service import OrderService
+from backend.services import notification_service
+
+
+def _notify_managers_new_order(order_id):
+    try:
+        for user in load_users():
+            if user.is_manager:
+                notification_service.notify_manager_new_order(str(user.id), order_id)
+    except Exception:
+        pass
 
 router = APIRouter()
 
@@ -16,6 +27,13 @@ def create_order(order: OrderCreate):
         )
     
     new_order = OrderService.create_order(order)
+    try:
+        notification_service.notify_order_placed(
+            str(order.customer_id), order.order_id
+        )
+    except Exception:
+        pass
+    _notify_managers_new_order(order.order_id)
     return {
         "message": "Order created",
         "order": new_order.to_dict()
@@ -42,6 +60,55 @@ def admin_update_order(
     return {"message": "Order updated", "order": order.to_dict()}
 
 
+@router.patch("/orders/{order_id}/advance")
+def advance_order_status(
+    order_id: str,
+    _current: User = Depends(require_manager),
+):
+    order = OrderService.get_order(order_id)
+    if not order:
+        order = OrderService.get_order(f"ORD-{order_id}")
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+
+    status_flow = {
+        "created": "mark_paid",
+        "paid": "prep_order",
+        "preparing": "send_out_delivery",
+        "out_for_delivery": "mark_delivered",
+    }
+    current = order.status.value if hasattr(order.status, "value") else str(order.status)
+    method_name = status_flow.get(current)
+    if not method_name:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Cannot advance from status: {current}",
+        )
+    try:
+        getattr(order, method_name)()
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    from backend.repositories.order_repo import OrderRepository
+    OrderRepository.save(order)
+
+    new_status = order.status.value if hasattr(order.status, "value") else str(order.status)
+    try:
+        if new_status == "delivered":
+            notification_service.notify_delivery(str(order.customer_id), order_id)
+        else:
+            notification_service.notify_status_change(
+                str(order.customer_id), order_id, new_status
+            )
+    except Exception:
+        pass
+
+    return {
+        "message": f"Order advanced to {new_status}",
+        "order": order.to_dict(),
+    }
+
+
 @router.get("/orders/{order_id}")
 def get_order(order_id: str):
     order = OrderService.get_order(order_id)
@@ -65,6 +132,12 @@ def get_order_history(customer_id: str):
 @router.post("/orders/{order_id}/cancel")
 def cancel_order(order_id: str):
     order = OrderService.cancel_order(order_id)
+    try:
+        notification_service.notify_order_cancelled(
+            str(order.customer_id), order_id
+        )
+    except Exception:
+        pass
     return {
         "message": "Order cancelled",
         "order": order.to_dict()
@@ -124,6 +197,14 @@ def confirm_reorder(reorder_draft_id: str):
         order = OrderService.confirm_reorder(reorder_draft_id)
     except LookupError:
         raise HTTPException(status_code=404, detail="Reorder draft not found")
+
+    try:
+        notification_service.notify_order_placed(
+            str(order.customer_id), order.order_id
+        )
+    except Exception:
+        pass
+    _notify_managers_new_order(order.order_id)
 
     return {
         "message": "Reorder confirmed",

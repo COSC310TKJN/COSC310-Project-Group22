@@ -33,7 +33,7 @@ def _notif_row_to_dict(row: dict[str, str]) -> dict:
         "title": row["title"],
         "message": row["message"],
         "is_read": row["is_read"] == "True",
-        "order_id": int(order_id) if order_id and order_id != "None" else None,
+        "order_id": order_id if order_id and order_id != "None" and order_id.strip() else None,
         "created_at": row["created_at"],
     }
 

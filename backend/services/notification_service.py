@@ -87,8 +87,21 @@ def mark_notification_read(notification_id):
     return notification
 
 
+def _ensure_default_preferences(user_id):
+    existing = notification_repo.get_preferences_by_user(user_id)
+    if existing:
+        return existing
+    defaults = []
+    for ntype in NotificationType:
+        pref = notification_repo.upsert_preference(
+            user_id, ntype.value, True, NotificationChannel.IN_APP.value
+        )
+        defaults.append(pref)
+    return defaults
+
+
 def get_preferences(user_id):
-    return notification_repo.get_preferences_by_user(user_id)
+    return _ensure_default_preferences(user_id)
 
 
 def update_preference(user_id, notification_type, enabled, channel):
