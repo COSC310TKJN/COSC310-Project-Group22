@@ -33,7 +33,7 @@ export default function ManageRestaurants() {
     setRestMsg("");
     setAddingRest(true);
     try {
-      const data = await api.post("/restaurants", {
+      const data = await api.restaurants.create({
         name: restForm.name,
         cuisine_type: restForm.cuisine_type,
         address: restForm.address || null,
@@ -54,7 +54,7 @@ export default function ManageRestaurants() {
     setAddingMenu(true);
     try {
       const basePrice = Number(menuForm.base_price);
-      const data = await api.post("/menu-items", {
+      const data = await api.restaurants.createMenuItem({
         restaurant_id: Number(menuForm.restaurant_id),
         name: menuForm.name,
         base_price: basePrice,

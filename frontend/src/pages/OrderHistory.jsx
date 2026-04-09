@@ -20,7 +20,7 @@ export default function OrderHistory() {
 
   useEffect(() => {
     api
-      .get(`/orders/history/${user.id}`)
+      .orders.history(user.id)
       .then((data) => setOrders(data.orders || []))
       .catch(() => setOrders([]))
       .finally(() => setLoading(false));
@@ -76,6 +76,11 @@ export default function OrderHistory() {
                 <p className="mt-1 text-xs text-zinc-400">
                   Order {o.order_id} &middot; Restaurant #{o.restaurant_id}
                 </p>
+                {o.source_order_id && (
+                  <p className="mt-0.5 text-xs text-emerald-600">
+                    Reordered from {o.source_order_id}
+                  </p>
+                )}
               </div>
               <div className="text-right">
                 <div className="font-semibold tabular-nums">

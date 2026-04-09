@@ -16,14 +16,11 @@ export default function Restaurants() {
 
   useEffect(() => {
     setLoading(true);
-    let path;
-    if (query) {
-      path = `/restaurants/search?q=${encodeURIComponent(query)}&page=${page}&page_size=12${cuisine !== "All" ? `&cuisine=${cuisine}` : ""}`;
-    } else {
-      path = `/restaurants?page=${page}&page_size=12${cuisine !== "All" ? `&cuisine=${cuisine}` : ""}`;
-    }
-    api
-      .get(path)
+    const cuisineFilter = cuisine !== "All" ? cuisine : undefined;
+    const request = query
+      ? api.restaurants.search({ q: query, page, pageSize: 12, cuisine: cuisineFilter })
+      : api.restaurants.list({ page, pageSize: 12, cuisine: cuisineFilter });
+    request
       .then((data) => {
         setRestaurants(data.items);
         setTotal(data.total);
